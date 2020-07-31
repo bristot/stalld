@@ -706,9 +706,10 @@ int boost_starving_task(int pid)
 
 }
 
-void check_starving_tasks(struct task_info *tasks, int nr_tasks, int cpu)
+int check_starving_tasks(struct task_info *tasks, int nr_tasks, int cpu)
 {
 	struct task_info *task;
+	int starving = 0;
 	int i;
 
 	for (i = 0; i < nr_tasks; i++) {
@@ -719,6 +720,8 @@ void check_starving_tasks(struct task_info *tasks, int nr_tasks, int cpu)
 			log_msg("%s-%d starved on CPU %d for %d seconds\n",
 				task->comm, task->pid, cpu,
 				(time(NULL) - task->since));
+
+			starving++;
 
 			/*
 			 * It it is only logging, just reset the time couter
@@ -732,6 +735,8 @@ void check_starving_tasks(struct task_info *tasks, int nr_tasks, int cpu)
 			boost_starving_task(task->pid);
 		}
 	}
+
+	return starving;
 }
 
 void print_usage(void)
