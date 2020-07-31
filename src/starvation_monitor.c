@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
+#include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
@@ -51,7 +52,7 @@ struct cpu_info {
 	int nr_rt_running;
 	int ctxsw;
 	int nr_waiting_tasks;
-	int should_run;
+	int thread_running;
 	struct task_info *starving;
 	pthread_t thread;
 };
@@ -109,6 +110,7 @@ unsigned long config_dl_runtime = 20000;
  */
 long config_starving_threshold = 60;
 long config_boost_duration = 3;
+long config_aggressive = 0;
 
 #define NS_PER_SEC 1000000000
 
@@ -552,7 +554,7 @@ int fill_waiting_task(char *buffer, struct task_info *task_info, int nr_entries)
 		 * skip the pid
 		 */
 		start=end;
-		
+
 		/*
 		 * skip the tree-key
 		 */
@@ -624,12 +626,12 @@ void merge_taks_info(struct task_info *old_tasks, int nr_old, struct task_info *
 	}
 }
 
-int parse_cpu_info(int cpu, char *buffer, int buffer_size,
-		   struct cpu_info *cpu_info)
+int parse_cpu_info(struct cpu_info *cpu_info, char *buffer, int buffer_size)
 {
 
 	struct task_info *old_tasks = cpu_info->starving;
 	int nr_old_tasks = cpu_info->nr_waiting_tasks;
+	int cpu = cpu_info->id;
 	char *cpu_buffer;
 
 	cpu_buffer = alloc_and_fill_cpu_buffer(cpu, buffer, buffer_size);
@@ -706,22 +708,23 @@ int boost_starving_task(int pid)
 
 }
 
-int check_starving_tasks(struct task_info *tasks, int nr_tasks, int cpu)
+int check_starving_tasks(struct cpu_info *cpu)
 {
+	struct task_info *tasks = cpu->starving;
 	struct task_info *task;
 	int starving = 0;
 	int i;
 
-	for (i = 0; i < nr_tasks; i++) {
+	for (i = 0; i < cpu->nr_waiting_tasks; i++) {
 		task = &tasks[i];
 
 		if ((time(NULL) - task->since) >= config_starving_threshold) {
 
 			log_msg("%s-%d starved on CPU %d for %d seconds\n",
-				task->comm, task->pid, cpu,
+				task->comm, task->pid, cpu->id,
 				(time(NULL) - task->since));
 
-			starving++;
+			starving+=1;
 
 			/*
 			 * It it is only logging, just reset the time couter
@@ -733,6 +736,32 @@ int check_starving_tasks(struct task_info *tasks, int nr_tasks, int cpu)
 			}
 
 			boost_starving_task(task->pid);
+		}
+	}
+
+	return starving;
+}
+
+int check_might_starve_tasks(struct cpu_info *cpu)
+{
+	struct task_info *tasks = cpu->starving;
+	struct task_info *task;
+	int starving = 0;
+	int i;
+
+	if (cpu->thread_running)
+		die("checking a running thread!!!???");
+
+	for (i = 0; i < cpu->nr_waiting_tasks; i++) {
+		task = &tasks[i];
+
+		if ((time(NULL) - task->since) >= config_starving_threshold/2) {
+
+			log_msg("%s-%d might starve on CPU %d (waiting for %d seconds)\n",
+				task->comm, task->pid, cpu->id,
+				(time(NULL) - task->since));
+
+			starving = 1;
 		}
 	}
 
@@ -762,6 +791,8 @@ void print_usage(void)
 		"          -d/--boost_duration: how long [s] the starving task will run with SCHED_DEADLINE",
 		"        monitoring options:",
 		"          -t/--starving_threshold: how long [s] the starving task will wait before being boosted",
+		"          -A/--aggressive_mode: dispatch one thread per run queue, even when there is no starving",
+		"                               threads on all CPU (uses more CPU/power).",
 		"	misc:",
 		"          -h/--help: print this menu",
 		NULL,
@@ -860,6 +891,7 @@ int parse_args(int argc, char **argv)
 			{"log_kmsg",		no_argument,	   0, 'k'},
 			{"log_syslog",		no_argument,	   0, 's'},
 			{"foreground",		no_argument,	   0, 'f'},
+			{"aggressive_mode",	no_argument,	   0, 'A'},
 			{"help",		no_argument,	   0, 'h'},
 			{"boost_period",	required_argument, 0, 'p'},
 			{"boost_runtime",	required_argument, 0, 'r'},
@@ -871,7 +903,7 @@ int parse_args(int argc, char **argv)
 		/* getopt_long stores the option index here. */
 		int option_index = 0;
 
-		c = getopt_long(argc, argv, "lvkfhs:p:r:d:t:c:",
+		c = getopt_long(argc, argv, "lvkfAhs:p:r:d:t:c:",
 				 long_options, &option_index);
 
 		/* Detect the end of the options. */
@@ -898,6 +930,9 @@ int parse_args(int argc, char **argv)
 			break;
 		case 'f':
 			config_foreground = 1;
+			break;
+		case 'A':
+			config_aggressive = 1;
 			break;
 		case 'p':
 			config_dl_period = get_long_from_str(optarg);
@@ -962,23 +997,36 @@ void *cpu_main(void *data)
 {
 	struct cpu_info *cpu = data;
 	char buffer[BUFFER_SIZE];
+	int nothing_to_do = 0;
 	int retval;
 
-	while (cpu->should_run) {
+	while (cpu->thread_running) {
 
 		retval = read_sched_debug(buffer, BUFFER_SIZE);
 		if(!retval)
 			die("fail reading sched debug file!");
 
-		parse_cpu_info(cpu->id, buffer, BUFFER_SIZE, cpu);
+		parse_cpu_info(cpu, buffer, BUFFER_SIZE);
 
 		if (config_verbose)
 			print_waiting_tasks(cpu);
 
-		if (cpu->nr_rt_running)
-			check_starving_tasks(cpu->starving,
-					     cpu->nr_waiting_tasks,
-					     cpu->id);
+		if (cpu->nr_rt_running && cpu->nr_waiting_tasks) {
+			nothing_to_do = 0;
+			check_starving_tasks(cpu);
+		} else {
+			nothing_to_do++;
+		}
+
+		/*
+		 * it not in aggressive mode, give up after 10 cycles with
+		 * nothing to do.
+		 */
+		if (!config_aggressive && nothing_to_do == 10) {
+			cpu->thread_running=0;
+			pthread_exit(NULL);
+		}
+
 		sleep(1);
 	}
 
@@ -994,11 +1042,79 @@ static const char *join_thread(pthread_t *thread)
 	return result;
 }
 
+int aggressive_main(struct cpu_info *cpus, int nr_cpus)
+{
+	int i;
+
+	for (i = 0; i < nr_cpus; i++) {
+		if (!should_monitor(i))
+			continue;
+
+		cpus[i].id = i;
+		cpus[i].thread_running = 1;
+		pthread_create(&cpus[i].thread, NULL, cpu_main, &cpus[i]);
+	}
+
+	for (i = 0; i < nr_cpus; i++) {
+		if (!should_monitor(i))
+			continue;
+
+		join_thread(&cpus[i].thread);
+	}
+
+	return 0;
+}
+
+int conservative_main(struct cpu_info *cpus, int nr_cpus)
+{
+	char buffer[BUFFER_SIZE];
+	pthread_attr_t dettached;
+	struct cpu_info *cpu;
+	int retval;
+	int i;
+
+	pthread_attr_setdetachstate(&dettached, PTHREAD_CREATE_DETACHED);
+
+	for (i = 0; i < nr_cpus; i++) {
+		cpus[i].id = i;
+		cpus[i].thread_running = 0;
+	}
+
+	while (1) {
+		retval = read_sched_debug(buffer, BUFFER_SIZE);
+		if(!retval)
+			die("fail reading sched debug file!");
+
+		for (i = 0; i < nr_cpus; i++) {
+			if (!should_monitor(i))
+				continue;
+
+			cpu = &cpus[i];
+
+			if (cpu->thread_running)
+				continue;
+
+			parse_cpu_info(cpu, buffer, BUFFER_SIZE);
+
+			if (config_verbose)
+				printf("\tchecking cpu %d - rt: %d - starving: %d\n", i, cpu->nr_rt_running, cpu->nr_waiting_tasks);
+
+			if (check_might_starve_tasks(cpu)) {
+				cpus[i].id = i;
+				cpus[i].thread_running = 1;
+				pthread_create(&cpus[i].thread, &dettached, cpu_main, &cpus[i]);
+			}
+		}
+
+		sleep(MAX(config_starving_threshold/20,1));
+	}
+}
+
+
 int main(int argc, char **argv)
 {
 	struct cpu_info *cpus;
 	int nr_cpus;
-	int i;
 
 	parse_args(argc, argv);
 
@@ -1018,20 +1134,10 @@ int main(int argc, char **argv)
 	if (!config_foreground)
 		deamonize();
 
-	for (i = 0; i < nr_cpus; i++) {
-		if (!should_monitor(i))
-			continue;
-
-		cpus[i].id = i;
-		cpus[i].should_run = 1;
-		pthread_create(&cpus[i].thread, NULL, cpu_main, &cpus[i]);
-	}
-
-	for (i = 0; i < nr_cpus; i++) {
-		if (!should_monitor(i))
-			continue;
-		join_thread(&cpus[i].thread);
-	}
+	if (config_aggressive)
+		aggressive_main(cpus, nr_cpus);
+	else
+		conservative_main(cpus, nr_cpus);
 
 	if (config_log_syslog)
 		closelog();
