@@ -1,0 +1,7 @@
+redhat/BUILD*
+redhat/RPMS
+redhat/SRPMS
+redhat/SPECS
+redhat/SOURCES
+*.tar.xz
+*~
