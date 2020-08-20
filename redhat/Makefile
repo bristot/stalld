@@ -7,6 +7,7 @@ RPMARGS	:= 	--define "_topdir	$(HERE)" \
 		--define "_builddir 	$(HERE)/BUILD" \
 		--define "_rpmdir	$(HERE)/RPMS" \
 		--define "_srcrpmdir	$(HERE)/SRPMS"
+INSTALL	:= install
 
 all: rpm
 
@@ -23,3 +24,8 @@ rpm: rpmdirs
 
 clean:
 	@rm -rf $(RPMDIRS) *~
+
+install:
+	$(INSTALL) -m 755 -d $(DESTDIR)/etc/systemd/system
+	$(INSTALL) starvation_monitor.conf -m 644 $(DESTDIR)/etc/systemd
+	$(INSTALL) starvation_monitor.service -m 644 $(DESTDIR)/etc/systemd/system
