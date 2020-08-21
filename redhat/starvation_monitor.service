@@ -5,7 +5,7 @@ Description=Starvation Monitor
 # Type=simple
 Type=forking
 EnvironmentFile=/etc/systemd/starvation_monitor.conf
-ExecStart=/usr/bin/starvation_monitor $CLIST $AGGR $BP $BR $BD $THRESH $LOGGING $FG
+ExecStart=/usr/bin/starvation_monitor $CLIST $AGGR $BP $BR $BD $THRESH $LOGGING $FG $PF
 
 [Install]
 WantedBy=multi-user.target

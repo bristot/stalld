@@ -1,5 +1,5 @@
 Name:		starvation_monitor
-Version:	0.1
+Version:	0.2
 Release:	1%{?dist}
 Summary:	daemon that finds starving tasks and gives them a temporary boost
 
@@ -38,11 +38,14 @@ make DESTDIR=$RPM_BUILD_ROOT -C redhat install
 
 
 %changelog
-* Thu Aug 20 2020 williams@redhat.com
+* Fri Aug 21 2020 williams@redhat.com - 0.2-1
+- add pidfile logic
+
+* Thu Aug 20 2020 williams@redhat.com - 0.1-1
 - Added systemd service to redhat subdirectory
 - added make and rpm logic for systemd files
 
-* Wed Aug 19 2020 williams@redhat.com
+* Wed Aug 19 2020 williams@redhat.com - 0.0-1
 - initial version of specfile
 - Makefile mods for RPM builds
 - added systemd service and config files

@@ -1,5 +1,5 @@
 NAME	:= starvation_monitor
-VERSION	:= 0.1
+VERSION	:= 0.2
 
 
 INSTALL=install

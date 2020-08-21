@@ -4,7 +4,7 @@
  * This program was born after Daniel and Juri started debugging once again
  * problems caused kernel threads starving due to busy-loop sched FIFO threads.
  *
- * The idea is simple: after detecting a thread starving on a given CPU for a 
+ * The idea is simple: after detecting a thread starving on a given CPU for a
  * given period, this thread will receive a "bounded" chance to run, using
  * SCHED_DEADLINE. In this way, the starving thread is able to make progress
  * causing a bounded Operating System noise (OS Noise).
@@ -121,6 +121,11 @@ int config_monitor_all_cpus = 1;
 char *config_monitored_cpus;
 
 
+/*
+ * path to file for storing daemon pid
+ */
+char pidfile[MAXPATHLEN];
+
 void log_msg(const char *fmt, ...)
 {
 	const char *log_prefix = "starvation_monitor: ";
@@ -184,6 +189,19 @@ void die(const char *fmt, ...)
 	fprintf(stderr, "\n");
 	exit(ret);
 }
+
+void write_pidfile(void)
+{
+	FILE *f = fopen(pidfile, "w");
+	if (f != NULL) {
+		fprintf(f, "%d", getpid());
+		fclose(f);
+	}
+	else
+		die("unable to open pidfile %s: %s\n", pidfile, strerror(errno));
+}
+
+
 
 /*
  * Based on:
@@ -496,7 +514,7 @@ long get_variable_long_value(char *buffer, const char *variable)
 	return get_long_after_colon(start);
 }
 
-/* 
+/*
  * Example:
  * ' S           task   PID         tree-key  switches  prio     wait-time             sum-exec        sum-sleep'
  * '-----------------------------------------------------------------------------------------------------------'
@@ -662,7 +680,7 @@ int boost_starving_task(int pid)
 	struct sched_attr new_attr;
 	struct sched_attr old_attr;
 
-	memset(&new_attr, 0, sizeof(new_attr)); 
+	memset(&new_attr, 0, sizeof(new_attr));
 	new_attr.size = sizeof(new_attr);
 	new_attr.sched_policy   = SCHED_DEADLINE;
 	new_attr.sched_runtime  = config_dl_runtime;
@@ -794,6 +812,7 @@ void print_usage(void)
 		"          -A/--aggressive_mode: dispatch one thread per run queue, even when there is no starving",
 		"                               threads on all CPU (uses more CPU/power).",
 		"	misc:",
+		"          --pidfile: write daemon pid to specified file",
 		"          -h/--help: print this menu",
 		NULL,
 	};
@@ -883,6 +902,9 @@ int parse_args(int argc, char **argv)
 {
 	int c;
 
+	/* ensure the pidfile is an empty string */
+	pidfile[0] = '\0';
+
 	while (1) {
 		static struct option long_options[] = {
 			{"cpu",			required_argument, 0, 'c'},
@@ -897,6 +919,7 @@ int parse_args(int argc, char **argv)
 			{"boost_runtime",	required_argument, 0, 'r'},
 			{"boost_duration",	required_argument, 0, 'd'},
 			{"starving_threshold",	required_argument, 0, 't'},
+			{"pidfile",             required_argument, 0, 'P'},
 			{0, 0, 0, 0}
 		};
 
@@ -969,6 +992,9 @@ int parse_args(int argc, char **argv)
 		case 'h':
 			print_usage();
 			exit(EXIT_SUCCESS);
+			break;
+		case 'P':
+			strncpy(pidfile, optarg, sizeof(pidfile)-1);
 			break;
 		case '?':
 			usage("Invalid option");
@@ -1133,6 +1159,9 @@ int main(int argc, char **argv)
 
 	if (!config_foreground)
 		deamonize();
+
+	if (strlen(pidfile) > 0)
+		write_pidfile();
 
 	if (config_aggressive)
 		aggressive_main(cpus, nr_cpus);
