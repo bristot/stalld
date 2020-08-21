@@ -18,7 +18,7 @@ install:
 	$(INSTALL) starvation_monitor -m 755 $(DESTDIR)/usr/bin/
 	$(INSTALL) README.md -m 644 $(DESTDIR)/usr/share/$(NAME)-$(VERSION)
 
-.PHONY: clean tarball
+.PHONY: clean tarball redhat
 clean:
 	@test ! -f starvation_monitor || rm starvation_monitor
 	@test ! -f src/starvation_monitor.o || rm src/starvation_monitor.o

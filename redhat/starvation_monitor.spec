@@ -26,14 +26,23 @@ policy. The default is to allow 10 microseconds of runtime for 1 second of clock
 
 %install
 rm -rf $RPM_BUILD_ROOT
-%make_install
-
+#%make_install
+make DESTDIR=$RPM_BUILD_ROOT install
+make DESTDIR=$RPM_BUILD_ROOT -C redhat install
 
 %files
 /usr/bin/%{name}
+/etc/systemd/starvation_monitor.conf
+/etc/systemd/system/starvation_monitor.service
 %doc /usr/share/%{name}-%{version}/README.md
 
 
 %changelog
+* Thu Aug 20 2020 williams@redhat.com
+- Added systemd service to redhat subdirectory
+- added make and rpm logic for systemd files
+
 * Wed Aug 19 2020 williams@redhat.com
--
+- initial version of specfile
+- Makefile mods for RPM builds
+- added systemd service and config files
