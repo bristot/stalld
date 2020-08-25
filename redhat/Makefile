@@ -20,12 +20,12 @@ rpmdirs:
 
 rpm: rpmdirs
 	cp ../*.tar.xz SOURCES
-	rpmbuild -ba $(RPMARGS) starvation_monitor.spec
+	rpmbuild -ba $(RPMARGS) starved.spec
 
 clean:
 	@rm -rf $(RPMDIRS) *~
 
 install:
 	$(INSTALL) -m 755 -d $(DESTDIR)/etc/systemd/system
-	$(INSTALL) starvation_monitor.conf -m 644 $(DESTDIR)/etc/systemd
-	$(INSTALL) starvation_monitor.service -m 644 $(DESTDIR)/etc/systemd/system
+	$(INSTALL) starved.conf -m 644 $(DESTDIR)/etc/systemd
+	$(INSTALL) starved.service -m 644 $(DESTDIR)/etc/systemd/system
