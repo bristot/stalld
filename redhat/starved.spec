@@ -36,7 +36,7 @@ make DESTDIR=$RPM_BUILD_ROOT -C redhat install
 /usr/lib/systemd/system/%{name}.service
 %config(noreplace) /etc/systemd/starved.conf
 %doc /usr/share/%{name}-%{version}/README.md
-
+%doc /usr/share/man/man8/starved.8.gz
 
 %changelog
 * Tue Aug 25 2020 williams@redhat,com - 1.0-1
