@@ -26,6 +26,10 @@ clean:
 	@rm -rf $(RPMDIRS) *~
 
 install:
-	$(INSTALL) -m 755 -d $(DESTDIR)/etc/systemd/system
+	$(INSTALL) -m 755 -d $(DESTDIR)/etc/systemd
 	$(INSTALL) starved.conf -m 644 $(DESTDIR)/etc/systemd
-	$(INSTALL) starved.service -m 644 $(DESTDIR)/etc/systemd/system
+	$(INSTALL) -m 755 -d $(DESTDIR)/usr/lib/systemd/system
+	$(INSTALL) starved.service -m 644 $(DESTDIR)/usr/lib/systemd/system
+
+rpmlint:  starved.spec
+	rpmlint -i starved.spec
