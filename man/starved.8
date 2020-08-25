@@ -1,0 +1,90 @@
+.TH STARVED 8
+.SH NAME
+starved \- detect starving threads and boost them
+.SH SYNOPSIS
+.B starved
+[ -l ] [ -v ] [ -k ] [ -s ] [ -f ] [ -h ]
+[ -c cpu-list]
+[ -p time-in-ns ]
+[ -r time-in-ns ]
+[ -d time-in-sec ]
+[ -t time-in-sec ]
+.br
+
+.SH DESCRIPTION
+.I starved
+is a system daemon that monitors thread for the starvation
+condition.
+.IR Starvation
+occurs when a thread sits on a cpu run-queue for longer
+than the starvation-threshold, meaning the thread has not
+been allowed to run for threshold seconds. The thread is
+boosted using the SCHED_DEADLINE policy and given a time
+period to run. Once it uses this boost period, the thread
+is returned to its original scheduling policy.
+
+.SH OPTIONS
+.TP
+.B \-t|\-\-starving_threshold
+how long (in seconds) a thread must starve before being boosted
+.B [60 s]
+.TP
+.B \-p|\-\-boost_period
+SCHED_DEADLINE period in nanoseconds for a starving thread
+.B [1000000000 ns]
+.TP
+.B \-r|\-\-boost_runtime
+SCHED_DEADLINE runtime in nanoseconds for a starving thread
+.B [20000 ns]
+.TP
+.B \-d|\-\-boost_duration
+duration in seconds the starving thread will run
+.B [ 3 s]
+.TP
+.B \-l|\-\-log_only
+only log information, do no boosting
+.B [false]
+.TP
+.B \-v|\\-\-verbose
+print action informtion to stdout
+.B [false]
+.TP
+.B \-k|\-\-log_kmsg
+log information to the kernel buffer
+.B [false]
+.TP
+.B \-s|\-\-log_syslog
+print information to syslog
+.B [true]
+.TP
+.B \-f|\-\-foreground
+run in the foreground
+.B [false (true with \-v)]
+.TP
+.B \-P|\-\-pidfile
+write dameon pid to specified file
+.B [none]
+.TP
+.B \-A|\-\-aggressive_mode
+dispatch one thread per cpu run-queue, even if thre are no starving
+threads (uses more power).
+.B [false]
+.TP
+.B \-h|\-\-help
+print options
+.SH FILES
+.PD 0
+.TP 20
+.B /etc/systemd/starved.conf
+parameter file for systemd startup
+.TP
+.B /usr/lib/systemd/system/starved.service
+systemd unit file
+.TP
+.B /usr/bin/starved
+starved executable
+.SH BUGS
+none
+.SH AUTHOR
+Daniel Bristot de Oliveira (bristot@redhat.com)
+Juri Lelli (juri.lelli@redhat.com)
