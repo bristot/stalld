@@ -1,5 +1,5 @@
-NAME	:= starvation_monitor
-VERSION	:= 0.2
+NAME	:= starved
+VERSION	:= 1.0
 
 
 INSTALL=install
@@ -9,19 +9,19 @@ DIRS	:=	src redhat
 FILES 	:=	Makefile README.md
 TARBALL	:=	$(NAME)-$(VERSION).tar.xz
 
-all: src/starvation_monitor.o
-	$(CC) -o starvation_monitor -ggdb -lpthread src/starvation_monitor.o
+all: src/starved.o
+	$(CC) -o starved -ggdb -lpthread src/starved.o
 
 .PHONY: install
 install:
 	$(INSTALL) -m 755 -d $(DESTDIR)/usr/bin $(DESTDIR)/usr/share/$(NAME)-$(VERSION)
-	$(INSTALL) starvation_monitor -m 755 $(DESTDIR)/usr/bin/
+	$(INSTALL) starved -m 755 $(DESTDIR)/usr/bin/
 	$(INSTALL) README.md -m 644 $(DESTDIR)/usr/share/$(NAME)-$(VERSION)
 
 .PHONY: clean tarball redhat
 clean:
-	@test ! -f starvation_monitor || rm starvation_monitor
-	@test ! -f src/starvation_monitor.o || rm src/starvation_monitor.o
+	@test ! -f starved || rm starved
+	@test ! -f src/starved.o || rm src/starved.o
 	@test ! -f $(TARBALL) || rm -f $(TARBALL)
 	@make -C redhat clean
 	@rm -rf *~

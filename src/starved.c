@@ -9,6 +9,8 @@
  * SCHED_DEADLINE. In this way, the starving thread is able to make progress
  * causing a bounded Operating System noise (OS Noise).
  *
+ * SPDX-License-Identifier: GPL-2.0
+ *
  */
 
 #define _GNU_SOURCE

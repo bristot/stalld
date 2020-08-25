@@ -1,0 +1,11 @@
+[Unit]
+Description=Starvation Monitor
+
+[Service]
+# Type=simple
+Type=forking
+EnvironmentFile=/etc/systemd/starved.conf
+ExecStart=/usr/bin/starved $CLIST $AGGR $BP $BR $BD $THRESH $LOGGING $FG $PF
+
+[Install]
+WantedBy=multi-user.target

@@ -1,17 +1,17 @@
-Name:		starvation_monitor
-Version:	0.2
+Name:		starved
+Version:	%(grep ^VERSION ../Makefile | awk '{print $3}')
 Release:	1%{?dist}
 Summary:	daemon that finds starving tasks and gives them a temporary boost
 
 License:	GPL
-URL:		https://github.com/bristot/starvation_monitor
+URL:		https://github.com/bristot/starved
 Source0:	%{name}-%{version}.tar.xz
 
 BuildRequires: glibc-devel
 Requires:      systemd
 
 %description
-The starvation_monitor program monitors the set of system threads, looking for threads
+The starved program monitors the set of system threads, looking for threads
 that are ready-to-run but have not been given cpu time for some threshold period. When
 a starving thread is found, it is given a temporary boost using the SCHED_DEADLINE
 policy. The default is to allow 10 microseconds of runtime for 1 second of clock time.
@@ -32,8 +32,8 @@ make DESTDIR=$RPM_BUILD_ROOT -C redhat install
 
 %files
 /usr/bin/%{name}
-/etc/systemd/starvation_monitor.conf
-/etc/systemd/system/starvation_monitor.service
+/etc/systemd/starved.conf
+/etc/systemd/system/starved.service
 %doc /usr/share/%{name}-%{version}/README.md
 
 
