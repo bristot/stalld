@@ -1,14 +1,14 @@
 # starved
 
-The starved program is a mechanism to prevent the *starvation* of operating
-system threads in a real-time Linux system. The premise is to start up
-on a *housekeeping* cpu (one that is not used for real-application
-purposes) and to periodically monitor the state of each thread in the
-system, looking for a thread that has been on a run queue (i.e. ready
-to run) for a specifed length of time without being run. This
-condition is usually hit when the thread is on the same cpu as a
-high-priority cpu-intensive task and therefore is being given no
-opportunity to run.
+The starved program (which stands for 'starvation daemon') is a
+mechanism to prevent the *starvation* of operating system threads in a
+Linux system. The premise is to start up on a *housekeeping* cpu (one
+that is not used for real-application purposes) and to periodically
+monitor the state of each thread in the system, looking for a thread
+that has been on a run queue (i.e. ready to run) for a specifed length
+of time without being run. This condition is usually hit when the
+thread is on the same cpu as a high-priority cpu-intensive task and
+therefore is being given no opportunity to run.
 
 When a thread is judged to be starving, starved changes
 that thread to use the SCHED_DEADLINE policy and gives the thread a
