@@ -1,9 +1,9 @@
 Name:		starved
 Version:	%(grep ^VERSION ../Makefile | awk '{print $3}')
 Release:	1%{?dist}
-Summary:	daemon that finds starving tasks and gives them a temporary boost
+Summary:	Daemon that finds starving tasks and gives them a temporary boost
 
-License:	GPL
+License:	GPLv2
 URL:		https://github.com/bristot/starved
 Source0:	%{name}-%{version}.tar.xz
 
@@ -11,10 +11,12 @@ BuildRequires: glibc-devel
 Requires:      systemd
 
 %description
-The starved program monitors the set of system threads, looking for threads
-that are ready-to-run but have not been given cpu time for some threshold period. When
-a starving thread is found, it is given a temporary boost using the SCHED_DEADLINE
-policy. The default is to allow 10 microseconds of runtime for 1 second of clock time.
+The starved program monitors the set of system threads,
+looking for threads that are ready-to-run but have not
+been given processor time for some threshold period.
+When a starving thread is found, it is given a temporary
+boost using the SCHED_DEADLINE policy. The default is to
+allow 10 microseconds of runtime for 1 second of clock time.
 
 %prep
 %autosetup
@@ -26,18 +28,22 @@ policy. The default is to allow 10 microseconds of runtime for 1 second of clock
 
 %install
 rm -rf $RPM_BUILD_ROOT
-#%make_install
 make DESTDIR=$RPM_BUILD_ROOT install
 make DESTDIR=$RPM_BUILD_ROOT -C redhat install
 
 %files
-/usr/bin/%{name}
-/etc/systemd/starved.conf
-/etc/systemd/system/starved.service
+%_bindir/%{name}
+/usr/lib/systemd/system/%{name}.service
+%config(noreplace) /etc/systemd/starved.conf
 %doc /usr/share/%{name}-%{version}/README.md
-
+%doc /usr/share/man/man8/starved.8.gz
 
 %changelog
+* Tue Aug 25 2020 williams@redhat,com - 1.0-1
+- rename project to starved
+- set version to 1.0
+- clean up rpmlint complaints
+
 * Fri Aug 21 2020 williams@redhat.com - 0.2-1
 - add pidfile logic
 

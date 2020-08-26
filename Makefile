@@ -5,7 +5,7 @@ VERSION	:= 1.0
 INSTALL=install
 CFLAGS ?= -Wall -O2 -g
 
-DIRS	:=	src redhat
+DIRS	:=	src redhat man
 FILES 	:=	Makefile README.md
 TARBALL	:=	$(NAME)-$(VERSION).tar.xz
 
@@ -17,6 +17,8 @@ install:
 	$(INSTALL) -m 755 -d $(DESTDIR)/usr/bin $(DESTDIR)/usr/share/$(NAME)-$(VERSION)
 	$(INSTALL) starved -m 755 $(DESTDIR)/usr/bin/
 	$(INSTALL) README.md -m 644 $(DESTDIR)/usr/share/$(NAME)-$(VERSION)
+	$(INSTALL) -m 755 -d $(DESTDIR)/usr/share/man/man8
+	$(INSTALL) man/starved.8 -m 644 $(DESTDIR)/usr/share/man/man8
 
 .PHONY: clean tarball redhat
 clean:
