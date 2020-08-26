@@ -1,8 +1,8 @@
-.TH STARVED 8
+.TH STALLD 8
 .SH NAME
-starved \- detect starving threads and boost them
+stalld \- detect starving threads and boost them
 .SH SYNOPSIS
-.B starved
+.B stalld
 [ -l ] [ -v ] [ -k ] [ -s ] [ -f ] [ -h ]
 [ -c cpu-list]
 [ -p time-in-ns ]
@@ -12,7 +12,7 @@ starved \- detect starving threads and boost them
 .br
 
 .SH DESCRIPTION
-.I starved
+.I stalld
 is a system daemon that monitors thread for the starvation
 condition.
 .IR Starvation
@@ -75,14 +75,14 @@ print options
 .SH FILES
 .PD 0
 .TP 20
-.B /etc/systemd/starved.conf
+.B /etc/systemd/stalld.conf
 parameter file for systemd startup
 .TP
-.B /usr/lib/systemd/system/starved.service
+.B /usr/lib/systemd/system/stalld.service
 systemd unit file
 .TP
-.B /usr/bin/starved
-starved executable
+.B /usr/bin/stalld
+stalld executable
 .SH BUGS
 none
 .SH AUTHOR
