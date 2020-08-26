@@ -1,17 +1,17 @@
-Name:		starved
+Name:		stalld
 Version:	%(grep ^VERSION ../Makefile | awk '{print $3}')
 Release:	1%{?dist}
 Summary:	Daemon that finds starving tasks and gives them a temporary boost
 
 License:	GPLv2
-URL:		https://github.com/bristot/starved
+URL:		https://github.com/bristot/stalld
 Source0:	%{name}-%{version}.tar.xz
 
 BuildRequires: glibc-devel
 Requires:      systemd
 
 %description
-The starved program monitors the set of system threads,
+The stalld program monitors the set of system threads,
 looking for threads that are ready-to-run but have not
 been given processor time for some threshold period.
 When a starving thread is found, it is given a temporary
@@ -34,13 +34,13 @@ make DESTDIR=$RPM_BUILD_ROOT -C redhat install
 %files
 %{_bindir}/%{name}
 %{_unitdir}/%{name}.service
-%config(noreplace) /etc/systemd/starved.conf
+%config(noreplace) /etc/systemd/stalld.conf
 %doc %{_datadir}/%{name}-%{version}/README.md
-%doc %{_datadir}/man/man8/starved.8.gz
+%doc %{_datadir}/man/man8/stalld.8.gz
 
 %changelog
 * Tue Aug 25 2020 williams@redhat,com - 1.0-1
-- rename project to starved
+- rename project to stalld
 - set version to 1.0
 - clean up rpmlint complaints
 

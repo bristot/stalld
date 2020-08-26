@@ -20,16 +20,16 @@ rpmdirs:
 
 rpm: rpmdirs
 	cp ../*.tar.xz SOURCES
-	rpmbuild -ba $(RPMARGS) starved.spec
+	rpmbuild -ba $(RPMARGS) stalld.spec
 
 clean:
 	@rm -rf $(RPMDIRS) *~
 
 install:
 	$(INSTALL) -m 755 -d $(DESTDIR)/etc/systemd
-	$(INSTALL) starved.conf -m 644 $(DESTDIR)/etc/systemd
+	$(INSTALL) stalld.conf -m 644 $(DESTDIR)/etc/systemd
 	$(INSTALL) -m 755 -d $(DESTDIR)/usr/lib/systemd/system
-	$(INSTALL) starved.service -m 644 $(DESTDIR)/usr/lib/systemd/system
+	$(INSTALL) stalld.service -m 644 $(DESTDIR)/usr/lib/systemd/system
 
-rpmlint:  starved.spec
-	rpmlint -i starved.spec
+rpmlint:  stalld.spec
+	rpmlint -i stalld.spec

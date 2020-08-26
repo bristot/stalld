@@ -1,4 +1,4 @@
-NAME	:= starved
+NAME	:= stalld
 VERSION	:= 1.0
 
 
@@ -9,21 +9,21 @@ DIRS	:=	src redhat man
 FILES 	:=	Makefile README.md
 TARBALL	:=	$(NAME)-$(VERSION).tar.xz
 
-all: src/starved.o
-	$(CC) -o starved -ggdb -lpthread src/starved.o
+all: src/stalld.o
+	$(CC) -o stalld -ggdb -lpthread src/stalld.o
 
 .PHONY: install
 install:
 	$(INSTALL) -m 755 -d $(DESTDIR)/usr/bin $(DESTDIR)/usr/share/$(NAME)-$(VERSION)
-	$(INSTALL) starved -m 755 $(DESTDIR)/usr/bin/
+	$(INSTALL) stalld -m 755 $(DESTDIR)/usr/bin/
 	$(INSTALL) README.md -m 644 $(DESTDIR)/usr/share/$(NAME)-$(VERSION)
 	$(INSTALL) -m 755 -d $(DESTDIR)/usr/share/man/man8
-	$(INSTALL) man/starved.8 -m 644 $(DESTDIR)/usr/share/man/man8
+	$(INSTALL) man/stalld.8 -m 644 $(DESTDIR)/usr/share/man/man8
 
 .PHONY: clean tarball redhat
 clean:
-	@test ! -f starved || rm starved
-	@test ! -f src/starved.o || rm src/starved.o
+	@test ! -f stalld || rm stalld
+	@test ! -f src/stalld.o || rm src/stalld.o
 	@test ! -f $(TARBALL) || rm -f $(TARBALL)
 	@make -C redhat clean
 	@rm -rf *~

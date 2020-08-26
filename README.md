@@ -1,6 +1,6 @@
-# starved
+# stalld
 
-The starved program (which stands for 'starvation daemon') is a
+The stalld program (which stands for 'stall daemon') is a
 mechanism to prevent the *starvation* of operating system threads in a
 Linux system. The premise is to start up on a *housekeeping* cpu (one
 that is not used for real-application purposes) and to periodically
@@ -10,16 +10,16 @@ of time without being run. This condition is usually hit when the
 thread is on the same cpu as a high-priority cpu-intensive task and
 therefore is being given no opportunity to run.
 
-When a thread is judged to be starving, starved changes
+When a thread is judged to be starving, stalld changes
 that thread to use the SCHED_DEADLINE policy and gives the thread a
 small slice of time for that cpu (specified on the command line). The
 thread then runs and when that timeslice is used, the thread is then
-returned to its original scheduling policy and starved then
+returned to its original scheduling policy and stalld then
 continues to monitor thread states.
 
 ## Command Line Options
 
-`Usage: starved [-l] [-v] [-k] [-s] [-f] [-h]
+`Usage: stalld [-l] [-v] [-k] [-s] [-f] [-h]
           [-c cpu-list]
           [-p time in ns] [-r time in ns]
           [-d time in seconds ] [-t time in seconds ]`
