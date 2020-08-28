@@ -1,11 +1,11 @@
 Name:		stalld
-Version:	%(grep ^VERSION ../Makefile | awk '{print $3}')
+Version:	1.0
 Release:	1%{?dist}
 Summary:	Daemon that finds starving tasks and gives them a temporary boost
 
 License:	GPLv2
-URL:		https://github.com/bristot/stalld
-Source0:	%{name}-%{version}.tar.xz
+URL:		https://git.kernel.org/pub/scm/utils/stalld/stalld.git
+Source0:	https://jcwillia.fedorapeople.org/%{name}-%{version}.tar.xz
 
 BuildRequires: glibc-devel
 Requires:      systemd
