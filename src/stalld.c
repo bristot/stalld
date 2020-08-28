@@ -1,5 +1,5 @@
 /*
- * starvation_monitor: starvation detection and avoidance (with bounds).
+ * stalld: starvation detection and avoidance (with bounds).
  *
  * This program was born after Daniel and Juri started debugging once again
  * problems caused kernel threads starving due to busy-loop sched FIFO threads.
@@ -10,7 +10,7 @@
  * causing a bounded Operating System noise (OS Noise).
  *
  * SPDX-License-Identifier: GPL-2.0
- * 
+ *
  * Copyright (C) 2020 Red Hat Inc, Daniel Bristot de Oliveira <bristot@redhat.com>
  *
  */
@@ -132,7 +132,7 @@ char pidfile[MAXPATHLEN];
 
 void log_msg(const char *fmt, ...)
 {
-	const char *log_prefix = "starvation_monitor: ";
+	const char *log_prefix = "stalld: ";
 	char message[1024];
 	char *log;
 	int kmesg_fd;
@@ -181,7 +181,7 @@ void die(const char *fmt, ...)
 	int ret = errno;
 
 	if (errno)
-		perror("starvation_monitor: ");
+		perror("stalld: ");
 	else
 		ret = -1;
 
@@ -795,8 +795,8 @@ void print_usage(void)
 	int i;
 
 	char *msg[] = {
-		"starvation_monitor: starvation detection and avoidance (with bounds)",
-		"  usage: starvation_monitor [-l] [-v] [-k] [-s] [-f] [-h]\\",
+		"stalld: starvation detection and avoidance (with bounds)",
+		"  usage: stalld [-l] [-v] [-k] [-s] [-f] [-h]\\",
 		"          [-c cpu-list] \\",
 		"          [-p time in ns] [-r time in ns] \\",
 		"          [-d time in seconds ] [-t time in seconds ]",
@@ -1159,7 +1159,7 @@ int main(int argc, char **argv)
 	memset(cpus, 0, sizeof(struct cpu_info) * nr_cpus);
 
 	if (config_log_syslog)
-		openlog("starvation_monitor", 0, LOG_DAEMON);
+		openlog("stalld", 0, LOG_DAEMON);
 
 	if (!config_foreground)
 		deamonize();

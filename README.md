@@ -31,6 +31,7 @@ continues to monitor thread states.
 - -s/--log_syslog: print log to syslog [true]
 
 ### Startup options
+- -p/--cpu: list of cpus to monitor for stalled threads [all cpus]
 - -f/--foreground: run in foreground [false but true when -v]
 - -P/--pidfile: write daemon pid to specified file [no pidfile]
 

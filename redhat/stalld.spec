@@ -1,13 +1,13 @@
 Name:		stalld
-Version:	%(grep ^VERSION ../Makefile | awk '{print $3}')
+Version:	1.0
 Release:	1%{?dist}
 Summary:	Daemon that finds starving tasks and gives them a temporary boost
 
 License:	GPLv2
-URL:		https://github.com/bristot/stalld
-Source0:	%{name}-%{version}.tar.xz
+URL:		https://git.kernel.org/pub/scm/utils/stalld/stalld.git
+Source0:	https://jcwillia.fedorapeople.org/%{name}-%{version}.tar.xz
 
-BuildRequires: glibc-devel
+BuildRequires: glibc-devel gcc make systemd-rpm-macros
 Requires:      systemd
 
 %description
@@ -21,15 +21,12 @@ allow 10 microseconds of runtime for 1 second of clock time.
 %prep
 %autosetup
 
-
 %build
 %make_build
 
-
 %install
-rm -rf $RPM_BUILD_ROOT
-make DESTDIR=$RPM_BUILD_ROOT install
-make DESTDIR=$RPM_BUILD_ROOT -C redhat install
+%make_install
+%make_install -C redhat
 
 %files
 %{_bindir}/%{name}
@@ -37,6 +34,15 @@ make DESTDIR=$RPM_BUILD_ROOT -C redhat install
 %config(noreplace) /etc/systemd/stalld.conf
 %doc %{_datadir}/%{name}-%{version}/README.md
 %doc %{_datadir}/man/man8/stalld.8.gz
+
+%post
+%systemd_post %{name}.service
+
+%preun
+%systemd_preun %{name}.service
+
+%postun
+%systemd_postun_with_restart %{name}.service
 
 %changelog
 * Tue Aug 25 2020 williams@redhat,com - 1.0-1
