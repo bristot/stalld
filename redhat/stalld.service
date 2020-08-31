@@ -4,7 +4,7 @@ Description=Stall Monitor
 [Service]
 # Type=simple
 Type=forking
-EnvironmentFile=/etc/systemd/stalld.conf
+EnvironmentFile=/etc/sysconfig/stalld
 ExecStart=/usr/bin/stalld $CLIST $AGGR $BP $BR $BD $THRESH $LOGGING $FG $PF
 
 [Install]

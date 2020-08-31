@@ -25,13 +25,13 @@ allow 10 microseconds of runtime for 1 second of clock time.
 %make_build
 
 %install
-%make_install
-%make_install -C redhat
+%make_install DOCDIR=%{_docdir} MANDIR=%{_mandir} BINDIR=%{_bindir}
+%make_install -C redhat UNITDIR=%{_unitdir}
 
 %files
 %{_bindir}/%{name}
 %{_unitdir}/%{name}.service
-%config(noreplace) /etc/systemd/stalld.conf
+%config(noreplace) /etc/sysconfig/stalld
 %doc %{_docdir}/README.md
 %doc %{_mandir}/man8/stalld.8*
 
