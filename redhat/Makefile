@@ -10,6 +10,7 @@ RPMARGS	:=	--define "_topdir	$(HERE)" \
 INSTALL	:= 	install
 UPSTREAM_TARBALLS	:= fedorapeople.org:~/public_html/
 UNITDIR	:=	/usr/lib/systemd/system
+DATADIR :=	/usr/share
 
 all:	rpm
 

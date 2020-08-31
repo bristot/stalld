@@ -25,7 +25,7 @@ allow 10 microseconds of runtime for 1 second of clock time.
 %make_build
 
 %install
-%make_install DOCDIR=%{_docdir} MANDIR=%{_mandir} BINDIR=%{_bindir}
+%make_install DOCDIR=%{_docdir} MANDIR=%{_mandir} BINDIR=%{_bindir} DATADIR=%{_datadir}
 %make_install -C redhat UNITDIR=%{_unitdir}
 
 %files
@@ -34,6 +34,7 @@ allow 10 microseconds of runtime for 1 second of clock time.
 %config(noreplace) /etc/sysconfig/stalld
 %doc %{_docdir}/README.md
 %doc %{_mandir}/man8/stalld.8*
+%license gpl-2.0.txt
 
 %post
 %systemd_post %{name}.service

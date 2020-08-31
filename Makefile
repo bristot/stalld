@@ -5,12 +5,14 @@ INSTALL=install
 CFLAGS ?= -Wall -O2 -g
 
 DIRS	:=	src redhat man
-FILES 	:=	Makefile README.md
+FILES 	:=	Makefile README.md gpl-2.0.txt
 TARBALL	:=	$(NAME)-$(VERSION).tar.xz
 UPSTREAM_TARBALLS	:= fedorapeople.org:~/public_html/
 BINDIR	:=	/usr/bin
-DOCDIR	:=	/usr/share/doc
-MANDIR	:=	/usr/share/man
+DATADIR	:=	/usr/share
+DOCDIR	:=	$(DATADIR)/doc
+MANDIR	:=	$(DATADIR)/man
+LICDIR	:=	$(DATADIR)/licenses
 
 all: src/stalld.o
 	$(CC) -o stalld -ggdb -lpthread src/stalld.o
@@ -22,6 +24,8 @@ install:
 	$(INSTALL) README.md -m 644 $(DESTDIR)$(DOCDIR)
 	$(INSTALL) -m 755 -d $(DESTDIR)$(MANDIR)/man8
 	$(INSTALL) man/stalld.8 -m 644 $(DESTDIR)$(MANDIR)/man8
+	$(INSTALL) -m 755 -d $(DESTDIR)$(LICDIR)/$(NAME)
+	$(INSTALL) gpl-2.0.txt -m 644 $(DESTDIR)$(LICDIR)/$(NAME)
 
 .PHONY: clean tarball redhat push
 clean:
