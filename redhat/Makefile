@@ -8,6 +8,7 @@ RPMARGS	:= 	--define "_topdir	$(HERE)" \
 		--define "_rpmdir	$(HERE)/RPMS" \
 		--define "_srcrpmdir	$(HERE)/SRPMS"
 INSTALL	:= install
+UPSTREAM_TARBALLS	:= fedorapeople.org:~/public_html/
 
 all: rpm
 
@@ -31,5 +32,10 @@ install:
 	$(INSTALL) -m 755 -d $(DESTDIR)/usr/lib/systemd/system
 	$(INSTALL) stalld.service -m 644 $(DESTDIR)/usr/lib/systemd/system
 
-rpmlint:  stalld.spec
+rpmlint:	rpm
 	rpmlint -i stalld.spec
+	rpmlint -i SRPMS/stalld*.rpm
+
+push:	rpm
+	scp stalld.spec $(UPSTREAM_TARBALLS)
+	scp SRPMS/stalld*.rpm $(UPSTREAM_TARBALLS)

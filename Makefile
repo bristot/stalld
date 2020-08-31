@@ -8,6 +8,7 @@ CFLAGS ?= -Wall -O2 -g
 DIRS	:=	src redhat man
 FILES 	:=	Makefile README.md
 TARBALL	:=	$(NAME)-$(VERSION).tar.xz
+UPSTREAM_TARBALLS	:= fedorapeople.org:~/public_html/
 
 all: src/stalld.o
 	$(CC) -o stalld -ggdb -lpthread src/stalld.o
@@ -20,7 +21,7 @@ install:
 	$(INSTALL) -m 755 -d $(DESTDIR)/usr/share/man/man8
 	$(INSTALL) man/stalld.8 -m 644 $(DESTDIR)/usr/share/man/man8
 
-.PHONY: clean tarball redhat
+.PHONY: clean tarball redhat push
 clean:
 	@test ! -f stalld || rm stalld
 	@test ! -f src/stalld.o || rm src/stalld.o
@@ -36,3 +37,7 @@ tarball:  clean
 
 redhat: tarball
 	$(MAKE) -C redhat
+
+push: tarball
+	scp $(TARBALL) $(UPSTREAM_TARBALLS)
+	make -C redhat push

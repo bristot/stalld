@@ -1,14 +1,14 @@
 Name:		stalld
 Version:	1.0
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Daemon that finds starving tasks and gives them a temporary boost
 
 License:	GPLv2
 URL:		https://git.kernel.org/pub/scm/utils/stalld/stalld.git
 Source0:	https://jcwillia.fedorapeople.org/%{name}-%{version}.tar.xz
 
-BuildRequires: glibc-devel gcc make systemd-rpm-macros
-Requires:      systemd
+BuildRequires:	glibc-devel gcc make systemd-rpm-macros
+Requires:	systemd
 
 %description
 The stalld program monitors the set of system threads,
@@ -32,8 +32,8 @@ allow 10 microseconds of runtime for 1 second of clock time.
 %{_bindir}/%{name}
 %{_unitdir}/%{name}.service
 %config(noreplace) /etc/systemd/stalld.conf
-%doc %{_datadir}/%{name}-%{version}/README.md
-%doc %{_datadir}/man/man8/stalld.8.gz
+%doc %{_docdir}/README.md
+%doc %{_mandir}/man8/stalld.8*
 
 %post
 %systemd_post %{name}.service
@@ -45,6 +45,12 @@ allow 10 microseconds of runtime for 1 second of clock time.
 %systemd_postun_with_restart %{name}.service
 
 %changelog
+* Mon Aug 31 2020 williams@redhat,com - 1.0-2
+- use _docdir macro for README.md
+- use _mandir macro for stalld.8 manpage
+- use tabs for spacing
+- added push Makefile target to copy latest to upstream URL
+
 * Tue Aug 25 2020 williams@redhat,com - 1.0-1
 - rename project to stalld
 - set version to 1.0
