@@ -1,11 +1,13 @@
-NAME	:= stalld
-VERSION	:= 1.0
+NAME	:=	stalld
+VERSION	:=	1.0
 
-INSTALL=install
-CFLAGS ?= -Wall -O2 -g
+INSTALL	=	install
+CFLAGS	?=	-Wall -O2 -g
+
+LDFLAGS	:=	-ggdb -lpthread
 
 DIRS	:=	src redhat man
-FILES 	:=	Makefile README.md gpl-2.0.txt
+FILES	:=	Makefile README.md gpl-2.0.txt
 TARBALL	:=	$(NAME)-$(VERSION).tar.xz
 UPSTREAM_TARBALLS	:= fedorapeople.org:~/public_html/
 BINDIR	:=	/usr/bin
@@ -15,7 +17,7 @@ MANDIR	:=	$(DATADIR)/man
 LICDIR	:=	$(DATADIR)/licenses
 
 all: src/stalld.o
-	$(CC) -o stalld -ggdb -lpthread src/stalld.o
+	$(CC) -o stalld	 $(LDFLAGS) src/stalld.o
 
 .PHONY: install
 install:

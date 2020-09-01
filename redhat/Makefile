@@ -4,10 +4,10 @@ HERE	:=	$(shell pwd)
 RPMDIRS	:=	SPECS SOURCES BUILDROOT RPMS SRPMS BUILD
 RPMARGS	:=	--define "_topdir	$(HERE)" \
 		--define "_sourcedir	$(HERE)/SOURCES" \
-		--define "_builddir 	$(HERE)/BUILD" \
+		--define "_builddir	$(HERE)/BUILD" \
 		--define "_rpmdir	$(HERE)/RPMS" \
 		--define "_srcrpmdir	$(HERE)/SRPMS"
-INSTALL	:= 	install
+INSTALL	:=	install
 UPSTREAM_TARBALLS	:= fedorapeople.org:~/public_html/
 UNITDIR	:=	/usr/lib/systemd/system
 DATADIR :=	/usr/share
