@@ -31,7 +31,7 @@ allow 10 microseconds of runtime for 1 second of clock time.
 %files
 %{_bindir}/%{name}
 %{_unitdir}/%{name}.service
-%config(noreplace) /etc/sysconfig/stalld
+%config(noreplace) %{_sysconfdir}/sysconfig/stalld
 %doc %{_docdir}/README.md
 %doc %{_mandir}/man8/stalld.8*
 %license gpl-2.0.txt
@@ -46,7 +46,7 @@ allow 10 microseconds of runtime for 1 second of clock time.
 %systemd_postun_with_restart %{name}.service
 
 %changelog
-* Mon Aug 31 2020 williams@redhat,com - 1.0-2
+* Mon Aug 31 2020 williams@redhat.com - 1.0-2
 - use _docdir macro for README.md
 - use _mandir macro for stalld.8 manpage
 - use tabs for spacing
