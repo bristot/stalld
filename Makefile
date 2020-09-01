@@ -2,9 +2,10 @@ NAME	:=	stalld
 VERSION	:=	1.0
 
 INSTALL	=	install
-CFLAGS	?=	-Wall -O2 -g
-
-LDFLAGS	:=	-ggdb -lpthread
+CC	:=	gcc
+CFLAGS	:=	-Wall -O2 -g
+LDFLAGS	:=	-ggdb
+LIBS	:=	 -lpthread
 
 DIRS	:=	src redhat man
 FILES	:=	Makefile README.md gpl-2.0.txt
@@ -17,7 +18,7 @@ MANDIR	:=	$(DATADIR)/man
 LICDIR	:=	$(DATADIR)/licenses
 
 all: src/stalld.o
-	$(CC) -o stalld	 $(LDFLAGS) src/stalld.o
+	$(CC) -o stalld	 $(LDFLAGS) src/stalld.o $(LIBS)
 
 .PHONY: install
 install:
