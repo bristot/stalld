@@ -135,6 +135,29 @@ char *config_monitored_cpus;
 
 
 /*
+ * print any error messages and exit
+ */
+
+void die(const char *fmt, ...)
+{
+	va_list ap;
+	int ret = errno;
+
+	if (errno)
+		perror("stalld: ");
+	else
+		ret = -1;
+
+	va_start(ap, fmt);
+	fprintf(stderr, "  ");
+	vfprintf(stderr, fmt, ap);
+	va_end(ap);
+
+	fprintf(stderr, "\n");
+	exit(ret);
+}
+
+/*
  * path to file for storing daemon pid
  */
 char pidfile[MAXPATHLEN];
@@ -171,7 +194,8 @@ void log_msg(const char *fmt, ...)
 		 * Log iff possible.
 		 */
 		if (kmesg_fd) {
-			write(kmesg_fd, message, strlen(message));
+			if (write(kmesg_fd, message, strlen(message)) < 0)
+				die ("write to klog failed");
 			close(kmesg_fd);
 		}
 	}
@@ -182,25 +206,6 @@ void log_msg(const char *fmt, ...)
 	if (config_log_syslog)
 		syslog(LOG_INFO, "%s", log);
 
-}
-
-void die(const char *fmt, ...)
-{
-	va_list ap;
-	int ret = errno;
-
-	if (errno)
-		perror("stalld: ");
-	else
-		ret = -1;
-
-	va_start(ap, fmt);
-	fprintf(stderr, "  ");
-	vfprintf(stderr, fmt, ap);
-	va_end(ap);
-
-	fprintf(stderr, "\n");
-	exit(ret);
 }
 
 void write_pidfile(void)
@@ -279,7 +284,8 @@ void deamonize(void)
 	/*
 	 * Change the working directory to the root directory.
 	 */
-	chdir("/");
+	if (chdir("/"))
+		die("Cannot change directory to '/'");
 }
 
 /*

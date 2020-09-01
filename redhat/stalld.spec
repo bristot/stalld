@@ -1,13 +1,17 @@
 Name:		stalld
 Version:	1.0
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Daemon that finds starving tasks and gives them a temporary boost
 
 License:	GPLv2
 URL:		https://git.kernel.org/pub/scm/utils/stalld/stalld.git
 Source0:	https://jcwillia.fedorapeople.org/%{name}-%{version}.tar.xz
 
-BuildRequires:	glibc-devel gcc make systemd-rpm-macros
+BuildRequires:	glibc-devel
+BuildRequires:	gcc
+BuildRequires:	make
+BuildRequires:	systemd-rpm-macros
+
 Requires:	systemd
 
 %description
@@ -22,7 +26,7 @@ allow 10 microseconds of runtime for 1 second of clock time.
 %autosetup
 
 %build
-%make_build
+%make_build CFLAGS="%{build_cflags}" LDFLAGS="%{build_ldflags}"
 
 %install
 %make_install DOCDIR=%{_docdir} MANDIR=%{_mandir} BINDIR=%{_bindir} DATADIR=%{_datadir}
@@ -46,25 +50,31 @@ allow 10 microseconds of runtime for 1 second of clock time.
 %systemd_postun_with_restart %{name}.service
 
 %changelog
-* Mon Aug 31 2020 williams@redhat.com - 1.0-2
+* Tue Sep  1 2020 Clark Williams <williams@redhat.com> - 1.0-3
+- Place BuildRequires on individual lines
+- Fix changelog notations
+- Modify build command to pass in CFLAGS and LDFLAGS
+- fix compiler warnings in stalld.c
+
+* Mon Aug 31 2020 Clark Williams <williams@redhat.com> - 1.0-2
 - use _docdir macro for README.md
 - use _mandir macro for stalld.8 manpage
 - use tabs for spacing
 - added push Makefile target to copy latest to upstream URL
 
-* Tue Aug 25 2020 williams@redhat,com - 1.0-1
+* Tue Aug 25 2020 Clark Williams <williams@redhat.com> - 1.0-1
 - rename project to stalld
 - set version to 1.0
 - clean up rpmlint complaints
 
-* Fri Aug 21 2020 williams@redhat.com - 0.2-1
+* Fri Aug 21 2020 Clark Williams <williams@redhat.com> - 0.2-1
 - add pidfile logic
 
-* Thu Aug 20 2020 williams@redhat.com - 0.1-1
+* Thu Aug 20 2020 Clark Williams <williams@redhat.com> - 0.1-1
 - Added systemd service to redhat subdirectory
 - added make and rpm logic for systemd files
 
-* Wed Aug 19 2020 williams@redhat.com - 0.0-1
+* Wed Aug 19 2020 Clark Williams <williams@redhat.com> - 0.0-1
 - initial version of specfile
 - Makefile mods for RPM builds
 - added systemd service and config files
