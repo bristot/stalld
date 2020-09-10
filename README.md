@@ -22,7 +22,7 @@ continues to monitor thread states.
 `Usage: stalld [-l] [-v] [-k] [-s] [-f] [-h]
           [-c cpu-list]
           [-p time in ns] [-r time in ns]
-          [-d time in seconds ] [-t time in seconds ]`
+          [-d time in seconds] [-t time in seconds]`
 
 ### Logging options
 - -l/--log_only: only log information (do not boost) [false]
@@ -31,7 +31,7 @@ continues to monitor thread states.
 - -s/--log_syslog: print log to syslog [true]
 
 ### Startup options
-- -p/--cpu: list of cpus to monitor for stalled threads [all cpus]
+- -c/--cpu: list of cpus to monitor for stalled threads [all cpus]
 - -f/--foreground: run in foreground [false but true when -v]
 - -P/--pidfile: write daemon pid to specified file [no pidfile]
 

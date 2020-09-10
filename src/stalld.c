@@ -811,10 +811,10 @@ void print_usage(void)
 
 	char *msg[] = {
 		"stalld: starvation detection and avoidance (with bounds)",
-		"  usage: stalld [-l] [-v] [-k] [-s] [-f] [-h]\\",
+		"  usage: stalld [-l] [-v] [-k] [-s] [-f] [-h] \\",
 		"          [-c cpu-list] \\",
 		"          [-p time in ns] [-r time in ns] \\",
-		"          [-d time in seconds ] [-t time in seconds ]",
+		"          [-d time in seconds] [-t time in seconds]",
 		"",
 		"       logging options:",
 		"          -l/--log_only: only log information (do not boost)",
