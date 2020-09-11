@@ -5,3 +5,5 @@ redhat/SPECS
 redhat/SOURCES
 *.tar.xz
 *~
+*.o
+stalld

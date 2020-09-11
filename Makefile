@@ -20,6 +20,9 @@ LICDIR	:=	$(DATADIR)/licenses
 all: src/stalld.o
 	$(CC) -o stalld	 $(LDFLAGS) src/stalld.o $(LIBS)
 
+static: src/stalld.o
+	$(CC) -o stalld-static $(LDFLAGS) --static src/stalld.o $(LIBS)
+
 .PHONY: install
 install:
 	$(INSTALL) -m 755 -d $(DESTDIR)$(BINDIR) $(DESTDIR)$(DOCDIR)
@@ -33,6 +36,7 @@ install:
 .PHONY: clean tarball redhat push
 clean:
 	@test ! -f stalld || rm stalld
+	@test ! -f stalld-static || rm stalld-static
 	@test ! -f src/stalld.o || rm src/stalld.o
 	@test ! -f $(TARBALL) || rm -f $(TARBALL)
 	@make -C redhat clean
