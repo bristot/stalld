@@ -17,11 +17,18 @@ DOCDIR	:=	$(DATADIR)/doc
 MANDIR	:=	$(DATADIR)/man
 LICDIR	:=	$(DATADIR)/licenses
 
-all: src/stalld.o
+.PHONY:	tests
+
+all:	stalld tests
 	$(CC) -o stalld	 $(LDFLAGS) src/stalld.o $(LIBS)
+
+stalld: src/stalld.o
 
 static: src/stalld.o
 	$(CC) -o stalld-static $(LDFLAGS) --static src/stalld.o $(LIBS)
+
+tests:
+	make -C tests
 
 .PHONY: install
 install:
@@ -33,6 +40,7 @@ install:
 	$(INSTALL) -m 755 -d $(DESTDIR)$(LICDIR)/$(NAME)
 	$(INSTALL) gpl-2.0.txt -m 644 $(DESTDIR)$(LICDIR)/$(NAME)
 
+
 .PHONY: clean tarball redhat push
 clean:
 	@test ! -f stalld || rm stalld
@@ -40,6 +48,7 @@ clean:
 	@test ! -f src/stalld.o || rm src/stalld.o
 	@test ! -f $(TARBALL) || rm -f $(TARBALL)
 	@make -C redhat clean
+	@make -C tests clean
 	@rm -rf *~
 
 tarball:  clean

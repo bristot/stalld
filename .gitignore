@@ -3,6 +3,7 @@ redhat/RPMS
 redhat/SRPMS
 redhat/SPECS
 redhat/SOURCES
+tests/test01
 *.tar.xz
 *~
 *.o
