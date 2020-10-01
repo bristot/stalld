@@ -932,6 +932,7 @@ void print_usage(void)
 		"          -p/--boost_period: SCHED_DEADLINE period [ns] that the starving task will receive",
 		"          -r/--boost_runtime: SCHED_DEADLINE runtime [ns] that the starving task will receive",
 		"          -d/--boost_duration: how long [s] the starving task will run with SCHED_DEADLINE",
+		"          -F/--force_fifo: use SCHED_FIFO for boosting",
 		"        monitoring options:",
 		"          -t/--starving_threshold: how long [s] the starving task will wait before being boosted",
 		"          -A/--aggressive_mode: dispatch one thread per run queue, even when there is no starving",
