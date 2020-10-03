@@ -427,6 +427,9 @@ int read_sched_debug(char *buffer, int size)
 
 	} while (retval > 0 && position < size);
 
+	if (position < size)
+		buffer[position] = '\0';
+
 	close(fd);
 
 	return position;
@@ -561,8 +564,17 @@ int fill_waiting_task(char *buffer, struct task_info *task_info, int nr_entries)
 	while (tasks < nr_entries) {
 		task = &task_info[tasks];
 
+		/*
+		 * only care about tasks in the Runnable state
+		 * Note: the actual scheduled task will show up as
+		 * "\n>R" so we will skip it.
+		 *
+		 */
 		start = strstr(start, "\n R");
 
+		/*
+		 * if no match then there are no more Runnable tasks
+		 */
 		if (!start)
 			break;
 
@@ -599,7 +611,7 @@ int fill_waiting_task(char *buffer, struct task_info *task_info, int nr_entries)
 		task->pid = strtol(start, &end, 10);
 
 		/*
-		 * skip the pid
+		 * go to the end of the pid
 		 */
 		start=end;
 
@@ -689,10 +701,8 @@ int parse_cpu_info(struct cpu_info *cpu_info, char *buffer, int buffer_size)
 	cpu_info->nr_running = get_variable_long_value(cpu_buffer, ".nr_running");
 	cpu_info->nr_rt_running = get_variable_long_value(cpu_buffer, ".rt_nr_running");
 
-	cpu_info->starving = malloc(sizeof(struct task_info) * MAX_WAITING_PIDS);
-
-	cpu_info->nr_waiting_tasks = fill_waiting_task(cpu_buffer, cpu_info->starving, MAX_WAITING_PIDS);
-
+	cpu_info->starving = malloc(sizeof(struct task_info) * cpu_info->nr_running);
+	cpu_info->nr_waiting_tasks = fill_waiting_task(cpu_buffer, cpu_info->starving, cpu_info->nr_running);
 	if (old_tasks) {
 		merge_taks_info(old_tasks, nr_old_tasks, cpu_info->starving, cpu_info->nr_waiting_tasks);
 		free(old_tasks);
