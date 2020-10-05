@@ -1,6 +1,6 @@
 Name:		stalld
 Version:	1.0
-Release:	3%{?dist}
+Release:	4%{?dist}
 Summary:	Daemon that finds starving tasks and gives them a temporary boost
 
 License:	GPLv2
@@ -50,6 +50,14 @@ allow 10 microseconds of runtime for 1 second of clock time.
 %systemd_postun_with_restart %{name}.service
 
 %changelog
+* Sun Oct  4 2020 Clark Williams <williams@redhat.com> - 1.0-4
+- Fix an option in README.md; consistency in user facing docs.
+- gitignore: ignore object files and the stalld executable
+- Makefile: add 'static' target to link stalld statically
+- use FIFO for boosting (v3)
+- stalld: update usage message to include --force_fifo/-F option
+- stalld.c: fix sched_debug parsing and modify waiting task parsing
+
 * Tue Sep  1 2020 Clark Williams <williams@redhat.com> - 1.0-3
 - Place BuildRequires on individual lines
 - Fix changelog notations
