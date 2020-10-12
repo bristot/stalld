@@ -616,8 +616,10 @@ int fill_waiting_task(char *buffer, struct task_info *task_info, int nr_entries)
 
 		comm_size = end - start;
 
-		if (comm_size > 15)
-			die("comm_size is too large: %d\n", comm_size);
+		if (comm_size > 15) {
+			warn("comm_size is too large: %d\n", comm_size);
+			comm_size = 15;
+		}
 
 		strncpy(task->comm, start, comm_size);
 
