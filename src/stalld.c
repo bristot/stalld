@@ -224,7 +224,7 @@ void log_msg(const char *fmt, ...)
 		 */
 		if (kmesg_fd) {
 			if (write(kmesg_fd, message, strlen(message)) < 0)
-				die ("write to klog failed");
+				warn("write to klog failed");
 			close(kmesg_fd);
 		}
 	}
