@@ -936,7 +936,7 @@ int check_might_starve_tasks(struct cpu_info *cpu)
 	int i;
 
 	if (cpu->thread_running)
-		die("checking a running thread!!!???");
+		warn("checking a running thread!!!???");
 
 	for (i = 0; i < cpu->nr_waiting_tasks; i++) {
 		task = &tasks[i];
