@@ -148,7 +148,6 @@ int boost_policy;
 /*
  * print any error messages and exit
  */
-
 void die(const char *fmt, ...)
 {
 	va_list ap;
@@ -167,6 +166,25 @@ void die(const char *fmt, ...)
 	fprintf(stderr, "\n");
 	exit(ret);
 }
+
+/*
+ * printy the error messages and but do not exit.
+ */
+void warn(const char *fmt, ...)
+{
+	va_list ap;
+
+	if (errno)
+		perror("stalld: ");
+
+	va_start(ap, fmt);
+	fprintf(stderr, "  ");
+	vfprintf(stderr, fmt, ap);
+	va_end(ap);
+
+	fprintf(stderr, "\n");
+}
+
 
 /*
  * path to file for storing daemon pid
@@ -206,7 +224,7 @@ void log_msg(const char *fmt, ...)
 		 */
 		if (kmesg_fd) {
 			if (write(kmesg_fd, message, strlen(message)) < 0)
-				die ("write to klog failed");
+				warn("write to klog failed");
 			close(kmesg_fd);
 		}
 	}
@@ -506,8 +524,10 @@ long get_long_from_str(char *start)
 
 	errno = 0;
 	value = strtol(start, &end, 10);
-	if (errno || start == end)
-		die("Invalid ID '%s'", value);
+	if (errno || start == end) {
+		warn("Invalid ID '%s'", value);
+		return -1;
+	}
 
 	return value;
 }
@@ -596,8 +616,10 @@ int fill_waiting_task(char *buffer, struct task_info *task_info, int nr_entries)
 
 		comm_size = end - start;
 
-		if (comm_size > 15)
-			die("comm_size is too large: %d\n", comm_size);
+		if (comm_size > 15) {
+			warn("comm_size is too large: %d\n", comm_size);
+			comm_size = 15;
+		}
 
 		strncpy(task->comm, start, comm_size);
 
@@ -691,12 +713,22 @@ int parse_cpu_info(struct cpu_info *cpu_info, char *buffer, int buffer_size)
 
 	struct task_info *old_tasks = cpu_info->starving;
 	int nr_old_tasks = cpu_info->nr_waiting_tasks;
+	long nr_running, nr_rt_running;
 	int cpu = cpu_info->id;
 	char *cpu_buffer;
+	int retval = 0;
 
 	cpu_buffer = alloc_and_fill_cpu_buffer(cpu, buffer, buffer_size);
 	if (!cpu_buffer)
-		return -1;
+		return -ENOMEM;
+
+	nr_running = get_variable_long_value(cpu_buffer, ".nr_running");
+	nr_rt_running = get_variable_long_value(cpu_buffer, ".rt_nr_running");
+
+	if ((nr_running == -1) || (nr_rt_running == -1)) {
+		retval = -EINVAL;
+		goto out_free;
+	}
 
 	cpu_info->nr_running = get_variable_long_value(cpu_buffer, ".nr_running");
 	cpu_info->nr_rt_running = get_variable_long_value(cpu_buffer, ".rt_nr_running");
@@ -708,9 +740,10 @@ int parse_cpu_info(struct cpu_info *cpu_info, char *buffer, int buffer_size)
 		free(old_tasks);
 	}
 
+out_free:
 	free(cpu_buffer);
 
-	return 0;
+	return retval;
 }
 
 int get_current_policy(int pid, struct sched_attr *attr)
@@ -903,7 +936,7 @@ int check_might_starve_tasks(struct cpu_info *cpu)
 	int i;
 
 	if (cpu->thread_running)
-		die("checking a running thread!!!???");
+		warn("checking a running thread!!!???");
 
 	for (i = 0; i < cpu->nr_waiting_tasks; i++) {
 		task = &tasks[i];
@@ -1169,10 +1202,18 @@ void *cpu_main(void *data)
 	while (cpu->thread_running) {
 
 		retval = read_sched_debug(buffer, BUFFER_SIZE);
-		if(!retval)
-			die("fail reading sched debug file!");
+		if(!retval) {
+			warn("fail reading sched debug file");
+			warn("Dazed and confused, but trying to continue");
+			continue;
+		}
 
-		parse_cpu_info(cpu, buffer, BUFFER_SIZE);
+		retval = parse_cpu_info(cpu, buffer, BUFFER_SIZE);
+		if (retval) {
+			warn("error parsing CPU info");
+			warn("Dazed and confused, but trying to continue");
+			continue;
+		}
 
 		if (config_verbose)
 			print_waiting_tasks(cpu);
@@ -1248,8 +1289,10 @@ int conservative_main(struct cpu_info *cpus, int nr_cpus)
 
 	while (1) {
 		retval = read_sched_debug(buffer, BUFFER_SIZE);
-		if(!retval)
-			die("fail reading sched debug file!");
+		if(!retval) {
+			warn("Dazed and confused, but trying to continue");
+			continue;
+		}
 
 		for (i = 0; i < nr_cpus; i++) {
 			if (!should_monitor(i))
@@ -1260,7 +1303,12 @@ int conservative_main(struct cpu_info *cpus, int nr_cpus)
 			if (cpu->thread_running)
 				continue;
 
-			parse_cpu_info(cpu, buffer, BUFFER_SIZE);
+			retval = parse_cpu_info(cpu, buffer, BUFFER_SIZE);
+			if (retval) {
+				warn("error parsing CPU info");
+				warn("Dazed and confused, but trying to continue");
+				continue;
+			}
 
 			if (config_verbose)
 				printf("\tchecking cpu %d - rt: %d - starving: %d\n",
