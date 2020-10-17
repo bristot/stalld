@@ -36,73 +36,7 @@
 #include <unistd.h>
 #include <linux/sched.h>
 
-#define BUFFER_SIZE		(1024 * 1000)
-#define MAX_WAITING_PIDS	30
-
-/*
- * See kernel/sched/debug.c:print_task().
- */
-struct task_info {
-	int pid;
-	int prio;
-	int ctxsw;
-	time_t since;
-	char comm[15];
-};
-
-struct cpu_info {
-	int id;
-	int nr_running;
-	int nr_rt_running;
-	int ctxsw;
-	int nr_waiting_tasks;
-	int thread_running;
-	struct task_info *starving;
-	pthread_t thread;
-};
-
-#ifdef __x86_64__
-# define __NR_sched_setattr 314
-# define __NR_sched_getattr 315
-#elif __i386__
-# define __NR_sched_setattr 351
-# define __NR_sched_getattr 352
-#elif __arm__
-# define __NR_sched_setattr 380
-# define __NR_sched_getattr 381
-#elif __aarch64__
-# define __NR_sched_setattr 274
-# define __NR_sched_getattr 275
-#elif __powerpc__
-# define __NR_sched_setattr 355
-# define __NR_sched_getattr 356
-#elif __s390x__
-# define __NR_sched_setattr 345
-# define __NR_sched_getattr 346
-#endif
-
-struct sched_attr {
-	uint32_t size;
-	uint32_t sched_policy;
-	uint64_t sched_flags;
-	int32_t sched_nice;
-	uint32_t sched_priority;
-	uint64_t sched_runtime;
-	uint64_t sched_deadline;
-	uint64_t sched_period;
-};
-
-int sched_setattr(pid_t pid, const struct sched_attr *attr,
-		  unsigned int flags) {
-	return syscall(__NR_sched_setattr, pid, attr, flags);
-}
-
-int sched_getattr(pid_t pid, struct sched_attr *attr,
-		  unsigned int size, unsigned int flags)
-{
-	return syscall (__NR_sched_getattr, pid , attr, size, flags);
-}
-
+#include "stalld.h"
 /*
  * logging.
  */
@@ -131,8 +65,6 @@ long config_starving_threshold = 60;
 long config_boost_duration = 3;
 long config_aggressive = 0;
 
-#define NS_PER_SEC 1000000000
-
 /*
  * XXX: Make it a cpu mask, lazy Daniel!
  */
@@ -144,6 +76,13 @@ char *config_monitored_cpus;
  * boolean to choose between deadline and fifo
  */
 int boost_policy;
+
+/*
+ * variable to indicate if stalld is running or
+ * shutting down
+ */
+
+int running = 1;
 
 /*
  * print any error messages and exit
@@ -285,8 +224,8 @@ void deamonize(void)
 	 * Catch, ignore and handle signals.
 	 * XXX: Implement a working signal handler.
 	 */
-	signal(SIGCHLD, SIG_IGN);
-	signal(SIGHUP, SIG_IGN);
+	//signal(SIGCHLD, SIG_IGN);
+	//signal(SIGHUP, SIG_IGN);
 
 	/*
 	 * Fork off for the second time.
@@ -516,57 +455,6 @@ char *alloc_and_fill_cpu_buffer(int cpu, char *sched_dbg, int sched_dbg_size)
 
 	return cpu_buffer;
 }
-
-long get_long_from_str(char *start)
-{
-	long value;
-	char *end;
-
-	errno = 0;
-	value = strtol(start, &end, 10);
-	if (errno || start == end) {
-		warn("Invalid ID '%s'", value);
-		return -1;
-	}
-
-	return value;
-}
-
-long get_long_after_colon(char *start)
-{
-	/*
-	 * Find the ":"
-	 */
-	start = strstr(start, ":");
-	if (!start)
-		return -1;
-
-	/*
-	 * skip ":"
-	 */
-	start++;
-
-	return get_long_from_str(start);
-}
-
-long get_variable_long_value(char *buffer, const char *variable)
-{
-	char *start;
-	/*
-	 * Line:
-	 * '  .nr_running                    : 0'
-	 */
-
-	/*
-	 * Find the ".nr_running"
-	 */
-	start = strstr(buffer, variable);
-	if (!start)
-		return -1;
-
-	return get_long_after_colon(start);
-}
-
 /*
  * Example:
  * ' S           task   PID         tree-key  switches  prio     wait-time             sum-exec        sum-sleep'
@@ -774,6 +662,7 @@ int boost_with_deadline(int pid)
 	    log_msg("boost_with_deadline failed to boost pid %d: %s\n", pid, strerror(errno));
 	    return ret;
 	}
+	log_msg("boosted pid %d using SCHED_DEADLINE\n", pid);
 	return ret;
 }
 
@@ -793,6 +682,7 @@ int boost_with_fifo(int pid)
 	    log_msg("boost_with_fifo failed to boost pid %d: %s\n", pid, strerror(errno));
 	    return ret;
 	}
+	log_msg("boosted pid %d using SCHED_FIFO\n", pid);
 	return ret;
 }
 
@@ -806,14 +696,6 @@ int restore_policy(int pid, struct sched_attr *attr)
 		log_msg("restore_policy: failed to restore sched policy for pid %d: %s\n",
 			pid, strerror(errno));
 	return ret;
-}
-
-void normalize_timespec(struct timespec *ts)
-{
-        while (ts->tv_nsec >= NS_PER_SEC) {
-                ts->tv_nsec -= NS_PER_SEC;
-                ts->tv_sec++;
-        }
 }
 
 /*
@@ -1199,7 +1081,7 @@ void *cpu_main(void *data)
 	int nothing_to_do = 0;
 	int retval;
 
-	while (cpu->thread_running) {
+	while (cpu->thread_running && running) {
 
 		retval = read_sched_debug(buffer, BUFFER_SIZE);
 		if(!retval) {
@@ -1249,7 +1131,7 @@ static const char *join_thread(pthread_t *thread)
 	return result;
 }
 
-int aggressive_main(struct cpu_info *cpus, int nr_cpus)
+void aggressive_main(struct cpu_info *cpus, int nr_cpus)
 {
 	int i;
 
@@ -1268,11 +1150,9 @@ int aggressive_main(struct cpu_info *cpus, int nr_cpus)
 
 		join_thread(&cpus[i].thread);
 	}
-
-	return 0;
 }
 
-int conservative_main(struct cpu_info *cpus, int nr_cpus)
+void conservative_main(struct cpu_info *cpus, int nr_cpus)
 {
 	char buffer[BUFFER_SIZE];
 	pthread_attr_t dettached;
@@ -1287,7 +1167,7 @@ int conservative_main(struct cpu_info *cpus, int nr_cpus)
 		cpus[i].thread_running = 0;
 	}
 
-	while (1) {
+	while (running) {
 		retval = read_sched_debug(buffer, BUFFER_SIZE);
 		if(!retval) {
 			warn("Dazed and confused, but trying to continue");
@@ -1404,6 +1284,9 @@ int main(int argc, char **argv)
 
 	if (config_log_syslog)
 		openlog("stalld", 0, LOG_DAEMON);
+
+	setup_signal_handling();
+	turn_off_rt_throttling();
 
 	if (!config_foreground)
 		deamonize();

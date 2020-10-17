@@ -7,6 +7,9 @@ CFLAGS	:=	-Wall -O2 -g
 LDFLAGS	:=	-ggdb
 LIBS	:=	 -lpthread
 
+SRC	:=	$(wildcard src/*.c)
+HDR	:=	$(wildcard src/*.h)
+OBJ	:=	$(SRC:.c=.o)
 DIRS	:=	src redhat man
 FILES	:=	Makefile README.md gpl-2.0.txt
 TARBALL	:=	$(NAME)-$(VERSION).tar.xz
@@ -17,15 +20,15 @@ DOCDIR	:=	$(DATADIR)/doc
 MANDIR	:=	$(DATADIR)/man
 LICDIR	:=	$(DATADIR)/licenses
 
-.PHONY:	tests
+.PHONY:	all tests
 
 all:	stalld tests
-	$(CC) -o stalld	 $(LDFLAGS) src/stalld.o $(LIBS)
 
-stalld: src/stalld.o
+stalld: $(OBJ)
+	$(CC) -o stalld	 $(LDFLAGS) $(OBJ) $(LIBS)
 
-static: src/stalld.o
-	$(CC) -o stalld-static $(LDFLAGS) --static src/stalld.o $(LIBS)
+static: $(OBJ)
+	$(CC) -o stalld-static $(LDFLAGS) --static $(OBJ) $(LIBS)
 
 tests:
 	make -C tests
@@ -49,7 +52,7 @@ clean:
 	@test ! -f $(TARBALL) || rm -f $(TARBALL)
 	@make -C redhat clean
 	@make -C tests clean
-	@rm -rf *~
+	@rm -rf *~ $(OBJ)
 
 tarball:  clean
 	rm -rf $(NAME)-$(VERSION) && mkdir $(NAME)-$(VERSION)
