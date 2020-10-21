@@ -72,6 +72,11 @@ long config_aggressive = 0;
 int config_monitor_all_cpus = 1;
 char *config_monitored_cpus;
 
+/*
+ * Max known to be enough sched_debug buffer size. It increases if the
+ * file gets larger.
+ */
+int config_buffer_size = BUFFER_SIZE;
 
 /*
  * boolean to choose between deadline and fifo
@@ -663,11 +668,11 @@ void conservative_main(struct cpu_info *cpus, int nr_cpus)
 	int retval;
 	int i;
 
-	buffer = malloc(BUFFER_SIZE);
+	buffer = malloc(config_buffer_size);
 	if (!buffer)
 		die("cannot allocate buffer");
 
-	buffer_size = BUFFER_SIZE;
+	buffer_size = config_buffer_size;
 
 	pthread_attr_init(&dettached);
 	pthread_attr_setdetachstate(&dettached, PTHREAD_CREATE_DETACHED);
@@ -794,11 +799,11 @@ int main(int argc, char **argv)
 	memset(cpus, 0, sizeof(struct cpu_info) * nr_cpus);
 
 	for (i = 0; i < nr_cpus; i++) {
-		cpus[i].buffer = malloc(BUFFER_SIZE);
+		cpus[i].buffer = malloc(config_buffer_size);
 		if (!cpus[i].buffer)
 			die("Cannot allocate memory");
 
-		cpus[i].buffer_size = BUFFER_SIZE;
+		cpus[i].buffer_size = config_buffer_size;
 	}
 
 	if (config_log_syslog)
