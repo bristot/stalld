@@ -72,6 +72,11 @@ long config_aggressive = 0;
 int config_monitor_all_cpus = 1;
 char *config_monitored_cpus;
 
+/*
+ * Max known to be enough sched_debug buffer size. It increases if the
+ * file gets larger.
+ */
+int config_buffer_size = BUFFER_SIZE;
 
 /*
  * boolean to choose between deadline and fifo
@@ -108,8 +113,12 @@ int read_sched_debug(char *buffer, int size)
 
 	} while (retval > 0 && position < size);
 
-	if (position < size)
-		buffer[position] = '\0';
+	buffer[position-1] = '\0';
+
+	if (position + 100 > config_buffer_size) {
+		config_buffer_size = config_buffer_size * 2;
+		log_msg("sched_debug is getting larger, increasing the buffer to %d\n", config_buffer_size);
+	}
 
 	close(fd);
 
@@ -155,6 +164,9 @@ char *alloc_and_fill_cpu_buffer(int cpu, char *sched_dbg, int sched_dbg_size)
 
 	cpu_start = get_cpu_info_start(sched_dbg, cpu);
 
+	/*
+	 * The CPU might be offline.
+	 */
 	if (!cpu_start)
 		return NULL;
 
@@ -335,8 +347,19 @@ int parse_cpu_info(struct cpu_info *cpu_info, char *buffer, int buffer_size)
 	int retval = 0;
 
 	cpu_buffer = alloc_and_fill_cpu_buffer(cpu, buffer, buffer_size);
-	if (!cpu_buffer)
-		return -ENOMEM;
+	/*
+	 * It is not necessarily a problem, the CPU might be offline. Cleanup
+	 * and leave.
+	 */
+	if (!cpu_buffer) {
+		if (old_tasks)
+			free(old_tasks);
+		cpu_info->nr_waiting_tasks = 0;
+		cpu_info->nr_running = 0;
+		cpu_info->nr_rt_running = 0;
+		cpu_info->starving = 0;
+		goto out;
+	}
 
 	nr_running = get_variable_long_value(cpu_buffer, ".nr_running");
 	nr_rt_running = get_variable_long_value(cpu_buffer, ".rt_nr_running");
@@ -346,8 +369,8 @@ int parse_cpu_info(struct cpu_info *cpu_info, char *buffer, int buffer_size)
 		goto out_free;
 	}
 
-	cpu_info->nr_running = get_variable_long_value(cpu_buffer, ".nr_running");
-	cpu_info->nr_rt_running = get_variable_long_value(cpu_buffer, ".rt_nr_running");
+	cpu_info->nr_running = nr_running;
+	cpu_info->nr_rt_running = nr_rt_running;
 
 	cpu_info->starving = malloc(sizeof(struct task_info) * cpu_info->nr_running);
 	cpu_info->nr_waiting_tasks = fill_waiting_task(cpu_buffer, cpu_info->starving, cpu_info->nr_running);
@@ -358,7 +381,7 @@ int parse_cpu_info(struct cpu_info *cpu_info, char *buffer, int buffer_size)
 
 out_free:
 	free(cpu_buffer);
-
+out:
 	return retval;
 }
 
@@ -567,20 +590,33 @@ int check_might_starve_tasks(struct cpu_info *cpu)
 void *cpu_main(void *data)
 {
 	struct cpu_info *cpu = data;
-	char buffer[BUFFER_SIZE];
 	int nothing_to_do = 0;
 	int retval;
 
 	while (cpu->thread_running && running) {
 
-		retval = read_sched_debug(buffer, BUFFER_SIZE);
+		/*
+		 * Buffer size should increase. See read_sched_debug().
+		 */
+		if (config_buffer_size != cpu->buffer_size) {
+			char *old_buffer = cpu->buffer;
+			cpu->buffer = realloc(cpu->buffer, config_buffer_size);
+			if (!cpu->buffer) {
+				warn("fail to increase the buffer... continue");
+				cpu->buffer = old_buffer;
+			} else {
+				cpu->buffer_size = config_buffer_size;
+			}
+		}
+
+		retval = read_sched_debug(cpu->buffer, cpu->buffer_size);
 		if(!retval) {
 			warn("fail reading sched debug file");
 			warn("Dazed and confused, but trying to continue");
 			continue;
 		}
 
-		retval = parse_cpu_info(cpu, buffer, BUFFER_SIZE);
+		retval = parse_cpu_info(cpu, cpu->buffer, cpu->buffer_size);
 		if (retval) {
 			warn("error parsing CPU info");
 			warn("Dazed and confused, but trying to continue");
@@ -644,12 +680,20 @@ void aggressive_main(struct cpu_info *cpus, int nr_cpus)
 
 void conservative_main(struct cpu_info *cpus, int nr_cpus)
 {
-	char buffer[BUFFER_SIZE];
 	pthread_attr_t dettached;
 	struct cpu_info *cpu;
+	char *buffer = NULL;
+	int buffer_size = 0;
 	int retval;
 	int i;
 
+	buffer = malloc(config_buffer_size);
+	if (!buffer)
+		die("cannot allocate buffer");
+
+	buffer_size = config_buffer_size;
+
+	pthread_attr_init(&dettached);
 	pthread_attr_setdetachstate(&dettached, PTHREAD_CREATE_DETACHED);
 
 	for (i = 0; i < nr_cpus; i++) {
@@ -658,7 +702,22 @@ void conservative_main(struct cpu_info *cpus, int nr_cpus)
 	}
 
 	while (running) {
-		retval = read_sched_debug(buffer, BUFFER_SIZE);
+
+		/*
+		 * Buffer size should increase. See read_sched_debug().
+		 */
+		if (config_buffer_size != buffer_size) {
+			char *old_buffer = buffer;
+			buffer = realloc(buffer, config_buffer_size);
+			if (!buffer) {
+				warn("fail to increase the buffer... continue");
+				buffer = old_buffer;
+			} else {
+				buffer_size = config_buffer_size;
+			}
+		}
+
+		retval = read_sched_debug(buffer, buffer_size);
 		if(!retval) {
 			warn("Dazed and confused, but trying to continue");
 			continue;
@@ -673,7 +732,7 @@ void conservative_main(struct cpu_info *cpus, int nr_cpus)
 			if (cpu->thread_running)
 				continue;
 
-			retval = parse_cpu_info(cpu, buffer, BUFFER_SIZE);
+			retval = parse_cpu_info(cpu, buffer, buffer_size);
 			if (retval) {
 				warn("error parsing CPU info");
 				warn("Dazed and confused, but trying to continue");
@@ -754,6 +813,7 @@ int main(int argc, char **argv)
 {
 	struct cpu_info *cpus;
 	int nr_cpus;
+	int i;
 
 	parse_args(argc, argv);
 
@@ -771,6 +831,14 @@ int main(int argc, char **argv)
 		die("Cannot allocate memory");
 
 	memset(cpus, 0, sizeof(struct cpu_info) * nr_cpus);
+
+	for (i = 0; i < nr_cpus; i++) {
+		cpus[i].buffer = malloc(config_buffer_size);
+		if (!cpus[i].buffer)
+			die("Cannot allocate memory");
+
+		cpus[i].buffer_size = config_buffer_size;
+	}
 
 	if (config_log_syslog)
 		openlog("stalld", 0, LOG_DAEMON);

@@ -9,7 +9,7 @@
 #ifndef __STALLD_H__
 #define __STALLD_H__
 
-#define BUFFER_SIZE		(1024 * 1000)
+#define BUFFER_SIZE		(100*1024)
 #define MAX_WAITING_PIDS	30
 
 /* informnation about running tasks on a cpu */
@@ -31,6 +31,8 @@ struct cpu_info {
        int thread_running;
        struct task_info *starving;
        pthread_t thread;
+       char *buffer;
+       int buffer_size;
 };
 
 #ifdef __x86_64__
