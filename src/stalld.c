@@ -155,6 +155,9 @@ char *alloc_and_fill_cpu_buffer(int cpu, char *sched_dbg, int sched_dbg_size)
 
 	cpu_start = get_cpu_info_start(sched_dbg, cpu);
 
+	/*
+	 * The CPU might be offline.
+	 */
 	if (!cpu_start)
 		return NULL;
 
@@ -335,8 +338,18 @@ int parse_cpu_info(struct cpu_info *cpu_info, char *buffer, int buffer_size)
 	int retval = 0;
 
 	cpu_buffer = alloc_and_fill_cpu_buffer(cpu, buffer, buffer_size);
-	if (!cpu_buffer)
-		return -ENOMEM;
+	/*
+	 * It is not necessarily a problem, the CPU might be offline. Cleanup
+	 * and leave.
+	 */
+	if (!cpu_buffer) {
+		if (old_tasks)
+			free(old_tasks);
+		cpu_info->nr_waiting_tasks = 0;
+		cpu_info->nr_running = 0;
+		cpu_info->nr_rt_running = 0;
+		goto out;
+	}
 
 	nr_running = get_variable_long_value(cpu_buffer, ".nr_running");
 	nr_rt_running = get_variable_long_value(cpu_buffer, ".rt_nr_running");
@@ -358,7 +371,7 @@ int parse_cpu_info(struct cpu_info *cpu_info, char *buffer, int buffer_size)
 
 out_free:
 	free(cpu_buffer);
-
+out:
 	return retval;
 }
 
