@@ -9,7 +9,7 @@
 #ifndef __STALLD_H__
 #define __STALLD_H__
 
-#define BUFFER_SIZE		(1024 * 1000)
+#define BUFFER_SIZE		(100*1024)
 #define MAX_WAITING_PIDS	30
 
 /* informnation about running tasks on a cpu */

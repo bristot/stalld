@@ -115,6 +115,11 @@ int read_sched_debug(char *buffer, int size)
 
 	buffer[position-1] = '\0';
 
+	if (position + 100 > config_buffer_size) {
+		config_buffer_size = config_buffer_size * 2;
+		log_msg("sched_debug is getting larger, increasing the buffer to %d\n", config_buffer_size);
+	}
+
 	close(fd);
 
 	return position;
@@ -590,6 +595,20 @@ void *cpu_main(void *data)
 
 	while (cpu->thread_running && running) {
 
+		/*
+		 * Buffer size should increase. See read_sched_debug().
+		 */
+		if (config_buffer_size != cpu->buffer_size) {
+			char *old_buffer = cpu->buffer;
+			cpu->buffer = realloc(cpu->buffer, config_buffer_size);
+			if (!cpu->buffer) {
+				warn("fail to increase the buffer... continue");
+				cpu->buffer = old_buffer;
+			} else {
+				cpu->buffer_size = config_buffer_size;
+			}
+		}
+
 		retval = read_sched_debug(cpu->buffer, cpu->buffer_size);
 		if(!retval) {
 			warn("fail reading sched debug file");
@@ -683,6 +702,21 @@ void conservative_main(struct cpu_info *cpus, int nr_cpus)
 	}
 
 	while (running) {
+
+		/*
+		 * Buffer size should increase. See read_sched_debug().
+		 */
+		if (config_buffer_size != buffer_size) {
+			char *old_buffer = buffer;
+			buffer = realloc(buffer, config_buffer_size);
+			if (!buffer) {
+				warn("fail to increase the buffer... continue");
+				buffer = old_buffer;
+			} else {
+				buffer_size = config_buffer_size;
+			}
+		}
+
 		retval = read_sched_debug(buffer, buffer_size);
 		if(!retval) {
 			warn("Dazed and confused, but trying to continue");
