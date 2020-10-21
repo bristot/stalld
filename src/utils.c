@@ -149,6 +149,7 @@ int setup_signal_handling(void)
  */
 void die(const char *fmt, ...)
 {
+	volatile int zero = 0;
 	va_list ap;
 	int ret = errno;
 
@@ -163,6 +164,13 @@ void die(const char *fmt, ...)
 	va_end(ap);
 
 	fprintf(stderr, "\n");
+
+	/*
+	 * Die with a divizion by zero to keep the stack on GDB.
+	 */
+	if (config_verbose)
+		zero = 10 / zero;
+
 	exit(ret);
 }
 
