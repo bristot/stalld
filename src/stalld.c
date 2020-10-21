@@ -346,8 +346,8 @@ int parse_cpu_info(struct cpu_info *cpu_info, char *buffer, int buffer_size)
 		goto out_free;
 	}
 
-	cpu_info->nr_running = get_variable_long_value(cpu_buffer, ".nr_running");
-	cpu_info->nr_rt_running = get_variable_long_value(cpu_buffer, ".rt_nr_running");
+	cpu_info->nr_running = nr_running;
+	cpu_info->nr_rt_running = nr_rt_running;
 
 	cpu_info->starving = malloc(sizeof(struct task_info) * cpu_info->nr_running);
 	cpu_info->nr_waiting_tasks = fill_waiting_task(cpu_buffer, cpu_info->starving, cpu_info->nr_running);
