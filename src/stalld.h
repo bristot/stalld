@@ -31,6 +31,8 @@ struct cpu_info {
        int thread_running;
        struct task_info *starving;
        pthread_t thread;
+       char *buffer;
+       int buffer_size;
 };
 
 #ifdef __x86_64__

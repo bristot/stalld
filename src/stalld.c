@@ -108,8 +108,7 @@ int read_sched_debug(char *buffer, int size)
 
 	} while (retval > 0 && position < size);
 
-	if (position < size)
-		buffer[position] = '\0';
+	buffer[position-1] = '\0';
 
 	close(fd);
 
@@ -348,6 +347,7 @@ int parse_cpu_info(struct cpu_info *cpu_info, char *buffer, int buffer_size)
 		cpu_info->nr_waiting_tasks = 0;
 		cpu_info->nr_running = 0;
 		cpu_info->nr_rt_running = 0;
+		cpu_info->starving = 0;
 		goto out;
 	}
 
@@ -580,20 +580,19 @@ int check_might_starve_tasks(struct cpu_info *cpu)
 void *cpu_main(void *data)
 {
 	struct cpu_info *cpu = data;
-	char buffer[BUFFER_SIZE];
 	int nothing_to_do = 0;
 	int retval;
 
 	while (cpu->thread_running && running) {
 
-		retval = read_sched_debug(buffer, BUFFER_SIZE);
+		retval = read_sched_debug(cpu->buffer, cpu->buffer_size);
 		if(!retval) {
 			warn("fail reading sched debug file");
 			warn("Dazed and confused, but trying to continue");
 			continue;
 		}
 
-		retval = parse_cpu_info(cpu, buffer, BUFFER_SIZE);
+		retval = parse_cpu_info(cpu, cpu->buffer, cpu->buffer_size);
 		if (retval) {
 			warn("error parsing CPU info");
 			warn("Dazed and confused, but trying to continue");
@@ -657,12 +656,20 @@ void aggressive_main(struct cpu_info *cpus, int nr_cpus)
 
 void conservative_main(struct cpu_info *cpus, int nr_cpus)
 {
-	char buffer[BUFFER_SIZE];
 	pthread_attr_t dettached;
 	struct cpu_info *cpu;
+	char *buffer = NULL;
+	int buffer_size = 0;
 	int retval;
 	int i;
 
+	buffer = malloc(BUFFER_SIZE);
+	if (!buffer)
+		die("cannot allocate buffer");
+
+	buffer_size = BUFFER_SIZE;
+
+	pthread_attr_init(&dettached);
 	pthread_attr_setdetachstate(&dettached, PTHREAD_CREATE_DETACHED);
 
 	for (i = 0; i < nr_cpus; i++) {
@@ -671,7 +678,7 @@ void conservative_main(struct cpu_info *cpus, int nr_cpus)
 	}
 
 	while (running) {
-		retval = read_sched_debug(buffer, BUFFER_SIZE);
+		retval = read_sched_debug(buffer, buffer_size);
 		if(!retval) {
 			warn("Dazed and confused, but trying to continue");
 			continue;
@@ -686,7 +693,7 @@ void conservative_main(struct cpu_info *cpus, int nr_cpus)
 			if (cpu->thread_running)
 				continue;
 
-			retval = parse_cpu_info(cpu, buffer, BUFFER_SIZE);
+			retval = parse_cpu_info(cpu, buffer, buffer_size);
 			if (retval) {
 				warn("error parsing CPU info");
 				warn("Dazed and confused, but trying to continue");
@@ -767,6 +774,7 @@ int main(int argc, char **argv)
 {
 	struct cpu_info *cpus;
 	int nr_cpus;
+	int i;
 
 	parse_args(argc, argv);
 
@@ -784,6 +792,14 @@ int main(int argc, char **argv)
 		die("Cannot allocate memory");
 
 	memset(cpus, 0, sizeof(struct cpu_info) * nr_cpus);
+
+	for (i = 0; i < nr_cpus; i++) {
+		cpus[i].buffer = malloc(BUFFER_SIZE);
+		if (!cpus[i].buffer)
+			die("Cannot allocate memory");
+
+		cpus[i].buffer_size = BUFFER_SIZE;
+	}
 
 	if (config_log_syslog)
 		openlog("stalld", 0, LOG_DAEMON);
