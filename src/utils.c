@@ -193,6 +193,21 @@ void warn(const char *fmt, ...)
 }
 
 
+/*
+ * print an informational message if config_verbose is true
+ */
+void info(const char *fmt, ...)
+{
+	va_list ap;
+
+	if (config_verbose) {
+		va_start(ap, fmt);
+		vfprintf(stderr, fmt, ap);
+		va_end(ap);
+	}
+}
+
+
 
 void log_msg(const char *fmt, ...)
 {
