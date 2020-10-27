@@ -1,6 +1,6 @@
 Name:		stalld
-Version:	1.0
-Release:	4%{?dist}
+Version:	1.1
+Release:	1%{?dist}
 Summary:	Daemon that finds starving tasks and gives them a temporary boost
 
 License:	GPLv2
@@ -50,6 +50,28 @@ allow 10 microseconds of runtime for 1 second of clock time.
 %systemd_postun_with_restart %{name}.service
 
 %changelog
+* Tue Oct 27 2020 Clark Williams <williams@redhat.com> - 1.1-1
+- Fix an option in README.md; consistency in user facing docs.
+- Makefile: add 'static' target to link stalld statically
+- gitignore: ignore object files and the stalld executable
+- use FIFO for boosting (v3)
+- stalld.c: fix sched_debug parsing and modify waiting task parsing
+- redhat:  update release for features and bugfix
+- stalld: Do not die if sched_debug returns an invalid value
+- src/stalld: Do not die if the comm is too large
+- src/stalld: Do not die if cannot write a message to the log
+- src/stalld: Do not die if the main runs while a thread is monitoring the CPU
+- implement RT throttling management and refactor source files
+- more refactoring
+- src/stalld: Reuse already read nr_running nr_rt_running
+- src/stalld: Gracefully handle CPUs not found on sched_debug
+- src/stalld: Use dynamically allocated memory to read sched_debug
+- src/utils: Die with a divizion by zero if verbose
+- src/stalld: Add config_buffer_size variable
+- src/stalld: Increase the sched_debug read buffer if it gets too small
+- src/stalld: Fix an retval check while reading sched_debug
+- src/throttling: Fix a compilation warning
+
 * Sun Oct  4 2020 Clark Williams <williams@redhat.com> - 1.0-4
 - Fix an option in README.md; consistency in user facing docs.
 - gitignore: ignore object files and the stalld executable
