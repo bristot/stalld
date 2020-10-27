@@ -106,7 +106,7 @@ int read_sched_debug(char *buffer, int size)
 
 	do {
 		retval = read(fd, &buffer[position], size - position);
-		if (read < 0)
+		if (retval < 0)
 			goto out_close_fd;
 
 		position += retval;
