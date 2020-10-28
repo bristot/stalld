@@ -1,5 +1,5 @@
 NAME	:=	stalld
-VERSION	:=	1.0
+VERSION	:=	1.1
 
 INSTALL	=	install
 CC	:=	gcc
@@ -10,7 +10,7 @@ LIBS	:=	 -lpthread
 SRC	:=	$(wildcard src/*.c)
 HDR	:=	$(wildcard src/*.h)
 OBJ	:=	$(SRC:.c=.o)
-DIRS	:=	src redhat man
+DIRS	:=	src redhat man tests
 FILES	:=	Makefile README.md gpl-2.0.txt
 TARBALL	:=	$(NAME)-$(VERSION).tar.xz
 UPSTREAM_TARBALLS	:= fedorapeople.org:~/public_html/
