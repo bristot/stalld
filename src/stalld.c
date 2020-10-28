@@ -431,12 +431,23 @@ out_error:
 	return runnable;
 }
 
-static int count_lines(char *buffer)
+static int count_task_lines(char *buffer)
 {
-	char *ptr = buffer;
+	char *ptr;
 	int len = strlen(buffer);
 	int lines = 0;
 	
+	/* find the runnable tasks: header */
+	ptr = strstr(buffer, "runnable tasks:");
+	if (ptr == NULL)
+		return 0;
+
+	/* skip to the end of the dashed line separator */
+	ptr = strstr(ptr, "-\n");
+	if (ptr == NULL)
+		return 0;
+
+	ptr += 2;
 	while(*ptr && ptr < (buffer+len)) {
 		lines++;
 		ptr = strchr(ptr, '\n');
@@ -552,7 +563,8 @@ int fill_waiting_task(char *buffer, struct cpu_info *cpu_info, int nr_entries)
 		nr_waiting = parse_new_task_format(buffer, cpu_info->starving, nr_entries);
 		break;
 	case OLD_TASK_FORMAT:
-		lines = count_lines(buffer);
+		/* count the number of tasks listed */
+		lines = count_task_lines(buffer);
 		if (lines <= 0)
 			return 0;
 		cpu_info->starving = malloc(sizeof(struct task_info) * lines);
