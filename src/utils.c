@@ -617,10 +617,10 @@ int parse_args(int argc, char **argv)
 			break;
 		case 'r':
 			config_dl_runtime = get_long_from_str(optarg);
-			if (config_dl_period < 200000000)
-				usage("boost_period should be at least 200 ms");
-			if (config_dl_period > 4000000000)
-				usage("boost_period should be at most 4 seconds");
+			if (config_dl_runtime < 8000)
+				usage("boost_runtime should be at least 8 us");
+			if (config_dl_runtime > 1000000)
+				usage("boost_runtime should be at most 1 ms");
 			break;
 		case 'd':
 			config_boost_duration = get_long_from_str(optarg);
