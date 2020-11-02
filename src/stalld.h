@@ -12,13 +12,14 @@
 #define BUFFER_SIZE		(100*1024)
 #define MAX_WAITING_PIDS	30
 
+#define COMM_SIZE		15
 /* informnation about running tasks on a cpu */
 struct task_info {
        int pid;
        int prio;
        int ctxsw;
        time_t since;
-       char comm[15];
+       char comm[COMM_SIZE+1];
 };
 
 /* information about cpus */
@@ -92,6 +93,7 @@ static inline void normalize_timespec(struct timespec *ts)
 
 void die(const char *fmt, ...);
 void warn(const char *fmt, ...);
+void info(const char *fmt, ...);
 void log_msg(const char *fmt, ...);
 
 long get_long_from_str(char *start);
