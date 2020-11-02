@@ -243,7 +243,7 @@ int detect_task_format(void)
 
 	if (buffer == NULL)
 		die("detect_task_format: unable to allocate %d bytes to read /proc/sched_debug");
-		
+
 	status = read_sched_debug(buffer, BUFFER_SIZE);
 	if (status && status <= BUFFER_SIZE)
 		warn("detect_task_format: sched_debug size greater than %d bytes didn't get full read\n", BUFFER_SIZE);
@@ -320,7 +320,7 @@ int parse_new_task_format(char *buffer, struct task_info *task_info, int nr_entr
 		 * find the end of the string
 		 */
 		end = skipchars(start);
-		
+
 		comm_size = end - start;
 
 		if (comm_size > COMM_SIZE) {
@@ -400,7 +400,7 @@ static int is_runnable(int pid)
 	}
 	if (retval < sizeof(stat))
 		stat[retval] = '\0';
-	
+
 	/*
 	 * the process state is the third white-space delimited
 	 * field in /proc/PID/stat. Skip to there and check what
@@ -436,7 +436,7 @@ static int count_task_lines(char *buffer)
 	char *ptr;
 	int len = strlen(buffer);
 	int lines = 0;
-	
+
 	/* find the runnable tasks: header */
 	ptr = strstr(buffer, TASK_MARKER);
 	if (ptr == NULL)
@@ -462,7 +462,7 @@ static int count_task_lines(char *buffer)
  * Example (old format):
  * '            task   PID         tree-key  switches  prio     wait-time             sum-exec        sum-sleep
  * ' ----------------------------------------------------------------------------------------------------------
- * '     watchdog/35   296       -11.731402      4081     0         0.000000        44.052473         0.000000 / 
+ * '     watchdog/35   296       -11.731402      4081     0         0.000000        44.052473         0.000000 /
  */
 int parse_old_task_format(char *buffer, struct task_info *task_info, int nr_entries)
 {
@@ -472,11 +472,11 @@ int parse_old_task_format(char *buffer, struct task_info *task_info, int nr_entr
 	int comm_size;
 	char *end;
 	char *buffer_end = start+strlen(buffer);
-	
+
 	start = strstr(start, TASK_MARKER);
 	start = strstr(start, "-\n");
 	start++;
-	
+
 	/*
 	 * we can't short-circuit using nr_entries, we have to scan the
 	 * entire list of processes that is on this cpu
@@ -526,8 +526,14 @@ int parse_old_task_format(char *buffer, struct task_info *task_info, int nr_entr
 		 */
 		start = skipspaces(start);
 		start = skipchars(start);
+		/*
+		 * pick up the context switch count
+		 */
 		ctxsw = strtol(start, &end, 10);
 		start = end;
+		/*
+		 * get the priority
+		 */
 		prio = strtol(start, &end, 10);
 		if (is_runnable(pid)) {
 			strncpy(task->comm, comm, comm_size);
@@ -553,7 +559,7 @@ int fill_waiting_task(char *buffer, struct cpu_info *cpu_info, int nr_entries)
 {
 	int nr_waiting = -1;
 	int lines;
-	
+
 	switch (config_task_format) {
 	case NEW_TASK_FORMAT:
 		cpu_info->starving = malloc(sizeof(struct task_info) * cpu_info->nr_running);
@@ -576,7 +582,7 @@ int fill_waiting_task(char *buffer, struct cpu_info *cpu_info, int nr_entries)
 	}
 	return nr_waiting;
 }
-	
+
 void print_waiting_tasks(struct cpu_info *cpu_info)
 {
 	struct task_info *task;
