@@ -438,7 +438,7 @@ static int count_task_lines(char *buffer)
 	int lines = 0;
 	
 	/* find the runnable tasks: header */
-	ptr = strstr(buffer, "runnable tasks:");
+	ptr = strstr(buffer, TASK_MARKER);
 	if (ptr == NULL)
 		return 0;
 
@@ -544,6 +544,7 @@ int parse_old_task_format(char *buffer, struct task_info *task_info, int nr_entr
 			break;
 		}
 	}
+
 	return waiting_tasks;
 }
 
