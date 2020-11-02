@@ -1108,7 +1108,8 @@ int main(int argc, char **argv)
 	/*
 	 * see if deadline scheduler is available
 	 */
-	boost_policy = check_policies();
+	if (!config_log_only)
+		boost_policy = check_policies();
 
 	nr_cpus = sysconf(_SC_NPROCESSORS_CONF);
 	if (nr_cpus < 1)
@@ -1134,7 +1135,9 @@ int main(int argc, char **argv)
 	config_task_format = detect_task_format();
 
 	setup_signal_handling();
-	turn_off_rt_throttling();
+
+	if(!config_log_only)
+		turn_off_rt_throttling();
 
 	if (!config_foreground)
 		deamonize();
