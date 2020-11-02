@@ -667,7 +667,10 @@ int parse_args(int argc, char **argv)
 	if (config_boost_duration > config_starving_threshold)
 		usage("the boost duration cannot be longer than the starving threshold ");
 
-	if (config_dl_runtime < 1000000)
+	/*
+	 * runtime is always < 1 ms, so enable hrtick. Unless config_log_only only is set.
+	 */
+	if (!config_log_only)
 		setup_hr_tick();
 
 	return(0);
