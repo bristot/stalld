@@ -1,5 +1,5 @@
 Name:		stalld
-Version:	1.1
+Version:	1.2
 Release:	1%{?dist}
 Summary:	Daemon that finds starving tasks and gives them a temporary boost
 
@@ -50,6 +50,17 @@ allow 10 microseconds of runtime for 1 second of clock time.
 %systemd_postun_with_restart %{name}.service
 
 %changelog
+* Mon Nov  2 2020 Clark Williams <williams@redhat.com> - 1.2-1
+- utils.c: added info() functions
+- detect and correctly parse old-style /proc/sched_debug
+- src/stalld: Fix an retval check while reading sched_debug
+- src/throttling: Fix a compilation warning
+- ensure we only count task lines in old-format sched_debug info
+- Add comments, clean up trailing whitespace
+- src/utils: Fix runtime parameters check
+- stalld: Do not take actions if log_only is set
+- remove warning from parse_old_task_format
+
 * Tue Oct 27 2020 Clark Williams <williams@redhat.com> - 1.1-1
 - Fix an option in README.md; consistency in user facing docs.
 - Makefile: add 'static' target to link stalld statically
