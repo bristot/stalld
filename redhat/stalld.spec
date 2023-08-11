@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0
 Name:		stalld
 Version:	1.2
 Release:	1%{?dist}

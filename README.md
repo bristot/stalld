@@ -1,5 +1,7 @@
 # stalld
 
+SPDX-License-Identifier: GPL-2.0
+
 The stalld program (which stands for 'stall daemon') is a
 mechanism to prevent the *starvation* of operating system threads in a
 Linux system. The premise is to start up on a *housekeeping* cpu (one
