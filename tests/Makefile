@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# Makefile for test01 - a test for monitoring thread starvation
+#
 CC	:= gcc
 CFLAGS	:= -g -Wall -pthread
 LIBS	:= -lpthread

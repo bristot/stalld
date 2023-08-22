@@ -1,3 +1,6 @@
+# NAME: stalld
+#
+# SPDX-License-Identifier: GPL-2.0
 NAME	:=	stalld
 VERSION	:=	1.2
 
